@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.project
+.settings/
+.cursor/
+
+# Composer
+/vendor/
+composer.phar
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.stylelintcache
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs and caches
+*.log
+.phpunit.result.cache
+.php-cs-fixer.cache
+.phpcs.cache
+.cache/
+coverage/
+*.lcov
+
+# Build artifacts
+*.map
+dist/
