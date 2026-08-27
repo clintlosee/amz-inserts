@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Amazon Inserts
  * Description:       Reusable Amazon affiliate text links, image links, product cards, and grids. Insert with a shortcode or a block.
- * Version:           1.0.3
+ * Version:           1.0.6
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Clint Losee
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AMZ_INSERTS_VERSION', '1.0.5' );
+define( 'AMZ_INSERTS_VERSION', '1.0.6' );
 define( 'AMZ_INSERTS_FILE', __FILE__ );
 define( 'AMZ_INSERTS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AMZ_INSERTS_URL', plugin_dir_url( __FILE__ ) );
