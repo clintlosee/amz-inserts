@@ -92,23 +92,30 @@ class Amz_Inserts_Fetch {
 			$html      = (string) wp_remote_retrieve_body( $remote );
 			$final_url = self::effective_url( $remote, $url );
 			$final_url = Amz_Inserts_Url::normalize( $final_url );
-			if ( '' !== $final_url ) {
+
+			// If final URL after redirects is not an Amazon URL, discard fetched data
+			if ( '' === $final_url ) {
+				$html      = '';
+				$final_url = $url;
+			} else {
 				if ( '' === $asin ) {
 					$asin = Amz_Inserts_Url::extract_asin( $final_url );
 				}
 			}
 
-			$title = self::meta_content( $html, 'og:title' );
-			if ( '' === $title ) {
-				$title = self::page_title( $html );
-			}
+			if ( '' !== $html ) {
+				$title = self::meta_content( $html, 'og:title' );
+				if ( '' === $title ) {
+					$title = self::page_title( $html );
+				}
 
-			$image_url = Amz_Inserts_Url::normalize_image_url( self::meta_content( $html, 'og:image' ) );
-			if ( '' === $image_url && '' !== $asin ) {
-				$image_url = Amz_Inserts_Url::asin_image_url( $asin );
-			}
+				$image_url = Amz_Inserts_Url::normalize_image_url( self::meta_content( $html, 'og:image' ) );
+				if ( '' === $image_url && '' !== $asin ) {
+					$image_url = Amz_Inserts_Url::asin_image_url( $asin );
+				}
 
-			$fetched = ( '' !== $title || '' !== $image_url );
+				$fetched = ( '' !== $title || '' !== $image_url );
+			}
 		}
 
 		if ( '' === $image_url && '' !== $asin ) {
