@@ -41,7 +41,7 @@ Hotlinked Amazon images rot over time, so the plugin tries to end up with a copy
 - Nothing here can cost you a unit. A failed download leaves the URL, title, and ASIN untouched and the unit saves normally; the front end then falls back to the stored image URL, and finally to the ASIN image address. A URL that fails is not retried for six hours.
 - Products that already have an image in the Media Library are never re-downloaded.
 
-Products added straight into a **Custom** block are not copied, since they are not saved as a unit. They use the image URL you give them and fall back to the ASIN image address.
+Saving a post does not import images for **Custom** block products, because they are not a unit. Those products use the image URL or Media Library attachment stored on the block, then fall back to the ASIN image address. The shared preview endpoint still imports when it is called, so **Fetch from URL** in the block editor can store that attachment on the block.
 
 To turn the copying off entirely, return `false` from the `amz_inserts_sideload_images` filter.
 
