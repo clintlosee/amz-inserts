@@ -81,11 +81,12 @@ class Amz_Inserts_Fetch {
 			);
 		}
 
-		$asin       = Amz_Inserts_Url::extract_asin( $url );
-		$tagged_url = Amz_Inserts_Url::with_tag( $url );
-		$title      = '';
-		$image_url  = '';
-		$fetched    = false;
+		$asin         = Amz_Inserts_Url::extract_asin( $url );
+		$tagged_url   = Amz_Inserts_Url::with_tag( $url );
+		$title        = '';
+		$image_url    = '';
+		$image_source = '';
+		$fetched      = false;
 
 		$remote = self::request( $url );
 		if ( ! is_wp_error( $remote ) ) {
@@ -109,9 +110,16 @@ class Amz_Inserts_Fetch {
 					$title = self::page_title( $html );
 				}
 
+				if ( '' === $asin ) {
+					$asin = self::asin_from_html( $html );
+				}
+
 				$image_url = Amz_Inserts_Url::normalize_image_url( self::meta_content( $html, 'og:image' ) );
-				if ( '' === $image_url && '' !== $asin ) {
-					$image_url = Amz_Inserts_Url::asin_image_url( $asin );
+				if ( '' !== $image_url ) {
+					$image_source = 'og';
+					if ( '' === $asin ) {
+						$asin = Amz_Inserts_Url::extract_asin( $image_url );
+					}
 				}
 
 				$fetched = ( '' !== $title || '' !== $image_url );
@@ -119,21 +127,63 @@ class Amz_Inserts_Fetch {
 		}
 
 		if ( '' === $image_url && '' !== $asin ) {
-			$image_url = Amz_Inserts_Url::asin_image_url( $asin );
+			$image_url    = Amz_Inserts_Url::asin_image_url( $asin );
+			$image_source = '' !== $image_url ? 'asin' : '';
 		}
+
+		$image_id = Amz_Inserts_Image::sideload( $image_url, $title, $asin );
+
+		// The scraped photo may be gone or unreachable; Amazon's ASIN endpoint is steadier.
+		if ( 0 === $image_id && 'og' === $image_source ) {
+			$asin_image = Amz_Inserts_Url::asin_image_url( $asin );
+			$image_id   = Amz_Inserts_Image::sideload( $asin_image, $title, $asin );
+			if ( $image_id > 0 ) {
+				$image_url    = $asin_image;
+				$image_source = 'asin';
+			}
+		}
+
+		$thumb = $image_id ? (string) wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
 
 		return rest_ensure_response(
 			array(
-				'ok'         => true,
-				'fetched'    => $fetched || '' !== $image_url,
-				'url'        => $url,
-				'tagged_url' => $tagged_url,
-				'asin'       => $asin,
-				'title'      => $title,
-				'image_id'   => 0,
-				'image_url'  => $image_url,
+				'ok'           => true,
+				'fetched'      => $fetched || '' !== $image_url,
+				'url'          => $url,
+				'tagged_url'   => $tagged_url,
+				'asin'         => $asin,
+				'title'        => $title,
+				'image_id'     => $image_id,
+				'image_url'    => $image_url,
+				'image_source' => $image_source,
+				'image_thumb'  => '' !== $thumb ? $thumb : $image_url,
 			)
 		);
+	}
+
+	/**
+	 * Last resort ASIN lookup for short links whose path carries no ASIN.
+	 */
+	private static function asin_from_html( string $html ): string {
+		$patterns = array(
+			'#<link[^>]+rel=[\'"]canonical[\'"][^>]+href=[\'"]([^\'"]+)[\'"]#i',
+			'#<meta[^>]+(?:property|name)=[\'"]og:url[\'"][^>]+content=[\'"]([^\'"]+)[\'"]#i',
+		);
+
+		foreach ( $patterns as $pattern ) {
+			if ( preg_match( $pattern, $html, $matches ) ) {
+				$asin = Amz_Inserts_Url::extract_asin( html_entity_decode( $matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+				if ( '' !== $asin ) {
+					return $asin;
+				}
+			}
+		}
+
+		if ( preg_match( '#data-asin=[\'"]([A-Z0-9]{10})[\'"]#i', $html, $matches ) ) {
+			return strtoupper( $matches[1] );
+		}
+
+		return '';
 	}
 
 	private static function request( string $url ): array|WP_Error {
