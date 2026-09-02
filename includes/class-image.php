@@ -73,6 +73,16 @@ class Amz_Inserts_Image {
 		}
 
 		$attachment_id = self::sideload( $source, (string) ( $item['title'] ?? '' ), $asin, $post_id );
+		if ( 0 === $attachment_id ) {
+			$asin_source = Amz_Inserts_Url::asin_image_url( $asin );
+			if ( '' !== $asin_source && $asin_source !== $source ) {
+				$attachment_id = self::sideload( $asin_source, (string) ( $item['title'] ?? '' ), $asin, $post_id );
+				if ( $attachment_id > 0 ) {
+					$item['image_url'] = $asin_source;
+				}
+			}
+		}
+
 		if ( $attachment_id > 0 ) {
 			$item['image_id'] = $attachment_id;
 		}
