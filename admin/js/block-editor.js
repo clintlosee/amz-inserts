@@ -74,9 +74,6 @@
 					if (data.image_url && !next.imageUrl) {
 						next.imageUrl = data.image_url;
 					}
-					if (data.image_id && !next.imageId) {
-						next.imageId = data.image_id;
-					}
 					onChange(next);
 
 					var notes = [];
@@ -85,9 +82,6 @@
 					}
 					if (data.image_source === 'asin') {
 						notes.push(__('Using the standard Amazon image for this ASIN.', 'amz-inserts'));
-					}
-					if (data.image_id) {
-						notes.push(__('Image saved to your Media Library.', 'amz-inserts'));
 					}
 					setStatus(notes.join(' '));
 				})
