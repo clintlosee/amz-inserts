@@ -44,7 +44,37 @@ class Amz_Inserts_Url {
 		);
 	}
 
+	/**
+	 * Image CDN hosts Amazon serves product photos from.
+	 *
+	 * @return string[]
+	 */
+	public static function allowed_image_host_suffixes(): array {
+		return array_merge(
+			array(
+				'media-amazon.com',
+				'ssl-images-amazon.com',
+				'images-amazon.com',
+			),
+			self::allowed_host_suffixes()
+		);
+	}
+
 	public static function is_amazon_url( string $url ): bool {
+		return self::host_matches( $url, self::allowed_host_suffixes() );
+	}
+
+	/**
+	 * True for image addresses we are willing to download and sideload.
+	 */
+	public static function is_amazon_image_url( string $url ): bool {
+		return self::host_matches( $url, self::allowed_image_host_suffixes() );
+	}
+
+	/**
+	 * @param string[] $suffixes
+	 */
+	private static function host_matches( string $url, array $suffixes ): bool {
 		$host = wp_parse_url( $url, PHP_URL_HOST );
 		if ( ! is_string( $host ) || '' === $host ) {
 			return false;
@@ -55,7 +85,7 @@ class Amz_Inserts_Url {
 			$host = substr( $host, 4 );
 		}
 
-		foreach ( self::allowed_host_suffixes() as $suffix ) {
+		foreach ( $suffixes as $suffix ) {
 			if ( $host === $suffix || str_ends_with( $host, '.' . $suffix ) ) {
 				return true;
 			}
@@ -66,8 +96,9 @@ class Amz_Inserts_Url {
 
 	public static function extract_asin( string $url ): string {
 		$patterns = array(
-			'#/(?:dp|gp/product|gp/aw/d|exec/obidos/ASIN)/([A-Z0-9]{10})#i',
+			'#/(?:dp|gp/product|gp/aw/d|gp/offer-listing|product|exec/obidos/ASIN|exec/obidos/tg/detail/-)/([A-Z0-9]{10})#i',
 			'#[?&]asin=([A-Z0-9]{10})#i',
+			'#/images/P/([A-Z0-9]{10})[._]#i',
 			'#/([B][A-Z0-9]{9})(?:[/?]|$)#i',
 		);
 
@@ -151,7 +182,7 @@ class Amz_Inserts_Url {
 	}
 
 	public static function asin_image_url( string $asin ): string {
-		$asin = strtoupper( preg_replace( '/[^A-Z0-9]/', '', $asin ) ?? '' );
+		$asin = preg_replace( '/[^A-Z0-9]/', '', strtoupper( $asin ) ) ?? '';
 		if ( 10 !== strlen( $asin ) ) {
 			return '';
 		}
