@@ -50,12 +50,24 @@ class Amz_Inserts_Image {
 	 * @param array $item Sanitized item.
 	 */
 	public static function ensure_item( array $item, int $post_id = 0 ): array {
-		if ( absint( $item['image_id'] ?? 0 ) > 0 ) {
-			return $item;
+		$image_id = absint( $item['image_id'] ?? 0 );
+		$asin     = (string) ( $item['asin'] ?? '' );
+		$source   = self::source_url( (string) ( $item['image_url'] ?? '' ), $asin );
+
+		if ( $image_id > 0 ) {
+			$imported_from = Amz_Inserts_Url::normalize_image_url(
+				(string) get_post_meta( $image_id, self::META_SOURCE_URL, true )
+			);
+
+			// Preserve manually selected attachments. For an image imported by
+			// this plugin, keep it only while its source still matches the field.
+			if ( '' === $imported_from || $imported_from === $source ) {
+				return $item;
+			}
+
+			$item['image_id'] = 0;
 		}
 
-		$asin   = (string) ( $item['asin'] ?? '' );
-		$source = self::source_url( (string) ( $item['image_url'] ?? '' ), $asin );
 		if ( '' === $source ) {
 			return $item;
 		}

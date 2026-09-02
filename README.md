@@ -34,14 +34,14 @@ Amazon and FTC rules still require a clear affiliate disclosure on the site. A f
 
 Hotlinked Amazon images rot over time, so the plugin tries to end up with a copy of every product photo in your Media Library:
 
-- **Fetch from URL** reads the product page's `og:image`. When Amazon blocks the request or the page has no image, it falls back to Amazon's standard image address for the ASIN.
-- Whichever address it lands on is downloaded into the Media Library, and the unit stores the attachment ID. Saving a unit does the same for any product that still has no attachment, so units created before this version pick up a local copy the next time you save them.
+- **Fetch from URL** previews the product page's `og:image`. When Amazon blocks the request or the page has no image, it falls back to Amazon's standard image address for the ASIN. You can replace the suggested Image URL before saving.
+- Saving the unit downloads the final Image URL into the Media Library and stores the attachment ID. Units created before this version pick up a local copy the next time you save them.
 - The ASIN is parsed from the product URL, and, when the page is readable, from its canonical link — short links like `amzn.to` and `a.co` resolve to a real ASIN this way.
 - Only images on Amazon's own hosts are downloaded. If you paste an image address of your own, it is left exactly as you typed it.
 - Nothing here can cost you a unit. A failed download leaves the URL, title, and ASIN untouched and the unit saves normally; the front end then falls back to the stored image URL, and finally to the ASIN image address. A URL that fails is not retried for six hours.
-- Products that already have an image in the Media Library are never re-downloaded.
+- Manually selected Media Library images are preserved. Images previously imported by the plugin are not re-downloaded unless you change their Image URL.
 
-Saving a post does not import images for **Custom** block products, because they are not a unit. Those products use the image URL or Media Library attachment stored on the block, then fall back to the ASIN image address. The shared preview endpoint still imports when it is called, so **Fetch from URL** in the block editor can store that attachment on the block.
+Saving a post does not import images for **Custom** block products, because they are not a unit. Those products use the image URL or Media Library attachment stored on the block, then fall back to the ASIN image address. The shared preview endpoint returns the suggested image URL without importing it.
 
 To turn the copying off entirely, return `false` from the `amz_inserts_sideload_images` filter.
 

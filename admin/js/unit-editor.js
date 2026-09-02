@@ -79,9 +79,7 @@
 
 	$(document).on('input', '.amz-item-image-url', function () {
 		var $row = $(this).closest('.amz-inserts-item');
-		if ($row.find('.amz-item-image-id').val()) {
-			return;
-		}
+		$row.find('.amz-item-image-id').val('');
 		setThumb($row, $.trim($(this).val()));
 	});
 
@@ -118,12 +116,9 @@
 				}
 				if (data.image_url && !$row.find('.amz-item-image-url').val()) {
 					$row.find('.amz-item-image-url').val(data.image_url);
-				}
-				if (data.image_id && !$row.find('.amz-item-image-id').val()) {
-					$row.find('.amz-item-image-id').val(data.image_id);
-					setThumb($row, data.image_thumb || data.image_url);
-				} else if (data.image_url && !$row.find('.amz-item-image-id').val()) {
-					setThumb($row, data.image_url);
+					if (!$row.find('.amz-item-image-id').val()) {
+						setThumb($row, data.image_url);
+					}
 				}
 
 				var notes = [];
@@ -132,9 +127,6 @@
 				}
 				if (data.image_source === 'asin') {
 					notes.push(amzInsertsAdmin.i18n.imageFromAsin);
-				}
-				if (data.image_id) {
-					notes.push(amzInsertsAdmin.i18n.imageSaved);
 				}
 				$status.text(notes.join(' '));
 			})

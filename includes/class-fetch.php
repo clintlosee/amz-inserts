@@ -131,20 +131,6 @@ class Amz_Inserts_Fetch {
 			$image_source = '' !== $image_url ? 'asin' : '';
 		}
 
-		$image_id = Amz_Inserts_Image::sideload( $image_url, $title, $asin );
-
-		// The scraped photo may be gone or unreachable; Amazon's ASIN endpoint is steadier.
-		if ( 0 === $image_id && 'og' === $image_source ) {
-			$asin_image = Amz_Inserts_Url::asin_image_url( $asin );
-			$image_id   = Amz_Inserts_Image::sideload( $asin_image, $title, $asin );
-			if ( $image_id > 0 ) {
-				$image_url    = $asin_image;
-				$image_source = 'asin';
-			}
-		}
-
-		$thumb = $image_id ? (string) wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
-
 		return rest_ensure_response(
 			array(
 				'ok'           => true,
@@ -153,10 +139,9 @@ class Amz_Inserts_Fetch {
 				'tagged_url'   => $tagged_url,
 				'asin'         => $asin,
 				'title'        => $title,
-				'image_id'     => $image_id,
+				'image_id'     => 0,
 				'image_url'    => $image_url,
 				'image_source' => $image_source,
-				'image_thumb'  => '' !== $thumb ? $thumb : $image_url,
 			)
 		);
 	}

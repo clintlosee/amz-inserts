@@ -78,7 +78,6 @@ class Amz_Inserts_Unit_Editor {
 					'fetchFailed'   => __( 'Could not fetch details. Paste an image URL or select an image.', 'amz-inserts' ),
 					'invalidUrl'    => __( 'Enter an Amazon URL first.', 'amz-inserts' ),
 					'imageFromAsin' => __( 'Using the standard Amazon image for this ASIN.', 'amz-inserts' ),
-					'imageSaved'    => __( 'Image saved to your Media Library.', 'amz-inserts' ),
 				),
 			)
 		);
