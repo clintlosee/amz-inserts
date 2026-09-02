@@ -23,6 +23,7 @@ define( 'AMZ_INSERTS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AMZ_INSERTS_URL', plugin_dir_url( __FILE__ ) );
 
 require_once AMZ_INSERTS_DIR . 'includes/class-url.php';
+require_once AMZ_INSERTS_DIR . 'includes/class-image.php';
 require_once AMZ_INSERTS_DIR . 'includes/class-settings.php';
 require_once AMZ_INSERTS_DIR . 'includes/class-renderer.php';
 require_once AMZ_INSERTS_DIR . 'includes/class-cpt-unit.php';
