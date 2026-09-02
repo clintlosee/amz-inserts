@@ -118,11 +118,25 @@
 				}
 				if (data.image_url && !$row.find('.amz-item-image-url').val()) {
 					$row.find('.amz-item-image-url').val(data.image_url);
-					if (!$row.find('.amz-item-image-id').val()) {
-						setThumb($row, data.image_url);
-					}
 				}
-				$status.text(data.fetched ? '' : amzInsertsAdmin.i18n.fetchFailed);
+				if (data.image_id && !$row.find('.amz-item-image-id').val()) {
+					$row.find('.amz-item-image-id').val(data.image_id);
+					setThumb($row, data.image_thumb || data.image_url);
+				} else if (data.image_url && !$row.find('.amz-item-image-id').val()) {
+					setThumb($row, data.image_url);
+				}
+
+				var notes = [];
+				if (!data.fetched) {
+					notes.push(amzInsertsAdmin.i18n.fetchFailed);
+				}
+				if (data.image_source === 'asin') {
+					notes.push(amzInsertsAdmin.i18n.imageFromAsin);
+				}
+				if (data.image_id) {
+					notes.push(amzInsertsAdmin.i18n.imageSaved);
+				}
+				$status.text(notes.join(' '));
 			})
 			.catch(function () {
 				$status.text(amzInsertsAdmin.i18n.fetchFailed);

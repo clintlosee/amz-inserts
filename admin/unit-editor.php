@@ -72,11 +72,13 @@ class Amz_Inserts_Unit_Editor {
 			array(
 				'previewPath' => '/amz-inserts/v1/preview',
 				'i18n'        => array(
-					'selectImage'  => __( 'Select image', 'amz-inserts' ),
-					'useImage'     => __( 'Use image', 'amz-inserts' ),
-					'fetching'     => __( 'Fetching…', 'amz-inserts' ),
-					'fetchFailed'  => __( 'Could not fetch details. Paste an image URL or select an image.', 'amz-inserts' ),
-					'invalidUrl'   => __( 'Enter an Amazon URL first.', 'amz-inserts' ),
+					'selectImage'   => __( 'Select image', 'amz-inserts' ),
+					'useImage'      => __( 'Use image', 'amz-inserts' ),
+					'fetching'      => __( 'Fetching…', 'amz-inserts' ),
+					'fetchFailed'   => __( 'Could not fetch details. Paste an image URL or select an image.', 'amz-inserts' ),
+					'invalidUrl'    => __( 'Enter an Amazon URL first.', 'amz-inserts' ),
+					'imageFromAsin' => __( 'Using the standard Amazon image for this ASIN.', 'amz-inserts' ),
+					'imageSaved'    => __( 'Image saved to your Media Library.', 'amz-inserts' ),
 				),
 			)
 		);
@@ -231,6 +233,8 @@ class Amz_Inserts_Unit_Editor {
 		}
 
 		$items = Amz_Inserts_Cpt_Unit::sanitize_items( wp_unslash( $_POST['amz_items'] ?? array() ) );
+
+		$items = Amz_Inserts_Image::ensure_items( $items, $post_id );
 
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_DISPLAY, $display );
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_COLUMNS, $columns );
