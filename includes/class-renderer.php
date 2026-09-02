@@ -61,11 +61,12 @@ class Amz_Inserts_Renderer {
 		return self::render(
 			Amz_Inserts_Cpt_Unit::get_display( $post_id ),
 			Amz_Inserts_Cpt_Unit::get_items( $post_id ),
-			Amz_Inserts_Cpt_Unit::get_columns( $post_id )
+			Amz_Inserts_Cpt_Unit::get_columns( $post_id ),
+			Amz_Inserts_Cpt_Unit::get_cta_label( $post_id )
 		);
 	}
 
-	public static function render( string $display, array $items, int $columns = 4 ): string {
+	public static function render( string $display, array $items, int $columns = 4, string $cta_label = '' ): string {
 		$types = Amz_Inserts_Cpt_Unit::display_types();
 		if ( ! isset( $types[ $display ] ) ) {
 			$display = 'card';
@@ -84,6 +85,7 @@ class Amz_Inserts_Renderer {
 			$items = array_slice( $items, 0, 1 );
 		}
 
+		$cta_label = self::cta_label( $cta_label );
 		$template = AMZ_INSERTS_DIR . 'templates/' . $display . '.php';
 		if ( ! is_readable( $template ) ) {
 			return '';
@@ -175,6 +177,19 @@ class Amz_Inserts_Renderer {
 
 	public static function link_atts(): string {
 		return 'rel="nofollow sponsored noopener" target="_blank"';
+	}
+
+	private static function cta_label( string $unit_label = '' ): string {
+		$label = trim( $unit_label );
+		if ( '' === $label ) {
+			$label = trim( (string) Amz_Inserts_Settings::get( 'cta_label', '' ) );
+		}
+
+		if ( '' === $label ) {
+			$label = (string) Amz_Inserts_Settings::defaults()['cta_label'];
+		}
+
+		return sanitize_text_field( $label );
 	}
 
 	private static function disclosure_html(): string {

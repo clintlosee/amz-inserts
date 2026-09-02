@@ -21,6 +21,7 @@ class Amz_Inserts_Settings {
 	public static function defaults(): array {
 		return array(
 			'associate_tag'   => '',
+			'cta_label'       => __( 'View on Amazon', 'amz-inserts' ),
 			'disclosure'      => '',
 			'show_disclosure' => 0,
 		);
@@ -64,6 +65,14 @@ class Amz_Inserts_Settings {
 		);
 
 		add_settings_field(
+			'cta_label',
+			__( 'Default CTA label', 'amz-inserts' ),
+			array( self::class, 'field_cta_label' ),
+			'amz_inserts',
+			'amz_inserts_main'
+		);
+
+		add_settings_field(
 			'show_disclosure',
 			__( 'Show disclosure under inserts', 'amz-inserts' ),
 			array( self::class, 'field_show_disclosure' ),
@@ -81,10 +90,15 @@ class Amz_Inserts_Settings {
 	}
 
 	public static function sanitize( mixed $input ): array {
-		$input = is_array( $input ) ? $input : array();
+		$input     = is_array( $input ) ? $input : array();
+		$cta_label = sanitize_text_field( $input['cta_label'] ?? '' );
+		if ( '' === $cta_label ) {
+			$cta_label = (string) self::defaults()['cta_label'];
+		}
 
 		return array(
 			'associate_tag'   => sanitize_text_field( $input['associate_tag'] ?? '' ),
+			'cta_label'       => $cta_label,
 			'disclosure'      => sanitize_textarea_field( $input['disclosure'] ?? '' ),
 			'show_disclosure' => empty( $input['show_disclosure'] ) ? 0 : 1,
 		);
@@ -112,6 +126,15 @@ class Amz_Inserts_Settings {
 			esc_attr( (string) self::get( 'associate_tag' ) )
 		);
 		echo '<p class="description">' . esc_html__( 'Your Amazon Associates tracking ID, for example yourname-20.', 'amz-inserts' ) . '</p>';
+	}
+
+	public static function field_cta_label(): void {
+		printf(
+			'<input type="text" class="regular-text" name="%1$s[cta_label]" value="%2$s" />',
+			esc_attr( self::OPTION ),
+			esc_attr( (string) self::get( 'cta_label' ) )
+		);
+		echo '<p class="description">' . esc_html__( 'Button text shown on card and grid displays.', 'amz-inserts' ) . '</p>';
 	}
 
 	public static function field_show_disclosure(): void {

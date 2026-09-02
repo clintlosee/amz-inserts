@@ -15,6 +15,7 @@ class Amz_Inserts_Cpt_Unit {
 	public const META_DISPLAY = '_amz_display';
 	public const META_COLUMNS = '_amz_columns';
 	public const META_ITEMS = '_amz_items';
+	public const META_CTA_LABEL = '_amz_cta_label';
 
 	public static function init(): void {
 		add_action( 'init', array( self::class, 'register' ) );
@@ -86,6 +87,10 @@ class Amz_Inserts_Cpt_Unit {
 		$items = get_post_meta( $post_id, self::META_ITEMS, true );
 
 		return is_array( $items ) ? $items : array();
+	}
+
+	public static function get_cta_label( int $post_id ): string {
+		return sanitize_text_field( (string) get_post_meta( $post_id, self::META_CTA_LABEL, true ) );
 	}
 
 	public static function sanitize_items( mixed $raw ): array {
