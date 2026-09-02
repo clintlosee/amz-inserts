@@ -4,6 +4,7 @@
 	var el = wp.element.createElement;
 	var Fragment = wp.element.Fragment;
 	var useState = wp.element.useState;
+	var useRef = wp.element.useRef;
 	var useEffect = wp.element.useEffect;
 	var registerBlockType = wp.blocks.registerBlockType;
 	var __ = wp.i18n.__;
@@ -25,6 +26,62 @@
 		var item = props.item || {};
 		var onChange = props.onChange;
 		var onRemove = props.onRemove;
+		var itemRef = useRef(item);
+		itemRef.current = item;
+		var statusState = useState('');
+		var status = statusState[0];
+		var setStatus = statusState[1];
+		var fetchingState = useState(false);
+		var fetching = fetchingState[0];
+		var setFetching = fetchingState[1];
+		var taggedState = useState('');
+		var taggedUrl = taggedState[0];
+		var setTaggedUrl = taggedState[1];
+		var fetchFailed = __('Could not fetch details. Paste an image URL or select an image.', 'amz-inserts');
+
+		function fetchFromUrl() {
+			var url = (item.url || '').trim();
+			if (!url) {
+				setStatus(__('Enter an Amazon URL first.', 'amz-inserts'));
+				return;
+			}
+
+			setFetching(true);
+			setStatus(__('Fetching…', 'amz-inserts'));
+			wp.apiFetch({
+				path: '/amz-inserts/v1/preview',
+				method: 'POST',
+				data: { url: url },
+			})
+				.then(function (data) {
+					setFetching(false);
+					if (!data || data.ok === false) {
+						setStatus((data && data.message) || fetchFailed);
+						return;
+					}
+
+					var next = Object.assign({}, itemRef.current || {});
+					if (data.tagged_url) {
+						next.url = data.tagged_url;
+						setTaggedUrl(data.tagged_url);
+					}
+					if (data.asin) {
+						next.asin = data.asin;
+					}
+					if (data.title && !next.title) {
+						next.title = data.title;
+					}
+					if (data.image_url && !next.imageUrl) {
+						next.imageUrl = data.image_url;
+					}
+					onChange(next);
+					setStatus(data.fetched ? '' : fetchFailed);
+				})
+				.catch(function () {
+					setFetching(false);
+					setStatus(fetchFailed);
+				});
+		}
 
 		return el(
 			'div',
@@ -36,6 +93,39 @@
 					onChange(Object.assign({}, item, { url: url }));
 				},
 			}),
+			el(
+				'p',
+				{ style: { marginTop: '0', marginBottom: '12px' } },
+				el(
+					Button,
+					{
+						variant: 'secondary',
+						onClick: fetchFromUrl,
+						disabled: fetching,
+					},
+					__('Fetch from URL', 'amz-inserts')
+				),
+				status
+					? el(
+							'span',
+							{
+								className: 'amz-item-fetch-status',
+								style: { marginLeft: '8px' },
+							},
+							status
+					  )
+					: null
+			),
+			taggedUrl
+				? el(
+						'p',
+						{
+							className: 'description amz-item-tagged',
+							style: { marginTop: '-4px', marginBottom: '12px', overflowWrap: 'anywhere' },
+						},
+						taggedUrl
+				  )
+				: null,
 			el(TextControl, {
 				label: __('Title', 'amz-inserts'),
 				value: item.title || '',
