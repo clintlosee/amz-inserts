@@ -79,9 +79,7 @@
 
 	$(document).on('input', '.amz-item-image-url', function () {
 		var $row = $(this).closest('.amz-inserts-item');
-		if ($row.find('.amz-item-image-id').val()) {
-			return;
-		}
+		$row.find('.amz-item-image-id').val('');
 		setThumb($row, $.trim($(this).val()));
 	});
 
@@ -122,7 +120,15 @@
 						setThumb($row, data.image_url);
 					}
 				}
-				$status.text(data.fetched ? '' : amzInsertsAdmin.i18n.fetchFailed);
+
+				var notes = [];
+				if (!data.fetched) {
+					notes.push(amzInsertsAdmin.i18n.fetchFailed);
+				}
+				if (data.image_source === 'asin') {
+					notes.push(amzInsertsAdmin.i18n.imageFromAsin);
+				}
+				$status.text(notes.join(' '));
 			})
 			.catch(function () {
 				$status.text(amzInsertsAdmin.i18n.fetchFailed);

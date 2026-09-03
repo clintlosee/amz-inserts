@@ -22,13 +22,28 @@ Amazon and FTC rules still require a clear affiliate disclosure on the site. A f
 4. For a grid, set max columns (2–4). Layout is 2 columns on phones, 3 on tablets, and up to 4 on large screens.
 5. Paste one or more Amazon URLs and set a title. For the image, either:
    - Paste an **Image URL** (right-click the product photo on Amazon → Copy image address), or
-   - Click **Fetch from URL** (best-effort; Amazon often blocks this), or
+   - Click **Fetch from URL** (best-effort; Amazon often blocks this, and the plugin falls back to the ASIN image), or
    - **Select image** from the Media Library if you prefer to upload.
 6. Publish the unit. Copy the shortcode from the list or the **Insert** box, for example:
 
 ```
 [amz_unit id="123"]
 ```
+
+## Product images
+
+Hotlinked Amazon images rot over time, so the plugin tries to end up with a copy of every product photo in your Media Library:
+
+- **Fetch from URL** previews the product page's `og:image`. When Amazon blocks the request or the page has no image, it falls back to Amazon's standard image address for the ASIN. You can replace the suggested Image URL before saving.
+- Saving the unit downloads the final Image URL into the Media Library and stores the attachment ID. Units created before this version pick up a local copy the next time you save them.
+- The ASIN is parsed from the product URL, and, when the page is readable, from its canonical link — short links like `amzn.to` and `a.co` resolve to a real ASIN this way.
+- Only images on Amazon's own hosts are downloaded. If you paste an image address of your own, it is left exactly as you typed it.
+- Nothing here can cost you a unit. A failed download leaves the URL, title, and ASIN untouched and the unit saves normally; the front end then falls back to the stored image URL, and finally to the ASIN image address. A URL that fails is not retried for six hours.
+- Manually selected Media Library images are preserved. Images previously imported by the plugin are not re-downloaded unless you change their Image URL.
+
+Saving a post does not import images for **Custom** block products, because they are not a unit. Those products use the image URL or Media Library attachment stored on the block, then fall back to the ASIN image address. The shared preview endpoint returns the suggested image URL without importing it.
+
+To turn the copying off entirely, return `false` from the `amz_inserts_sideload_images` filter.
 
 ## Insert into a post
 
