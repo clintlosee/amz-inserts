@@ -63,13 +63,12 @@
 
 .amz-inserts__cta {
 	align-self: flex-start;
-	margin-top: 0.75em;
-	padding: 0.5em 0.85em;
+	margin-top: 0.5em;
+	padding: 0.2em 0.5em;
 	border: 1px solid #c45500;
-	border-radius: 4px;
 	background: #ff9900;
 	color: #111;
-	font-size: 0.875em;
+	font-size: 0.7em;
 	font-weight: 600;
 	line-height: 1.2;
 	text-decoration: none;
