@@ -53,7 +53,7 @@ To turn the copying off entirely, return `false` from the `amz_inserts_sideload_
 **Block editor:** add the **Amazon Insert** block.
 
 - **Saved unit** — pick a unit you already published.
-- **Custom** — one-off text, image, card, or grid in this post without saving a unit.
+- **Custom** — one-off text, image, card, or grid in this post without saving a unit. Paste an Amazon URL and optionally click **Fetch from URL** for a best-effort title, image URL, and ASIN (same lookup as saved units; Amazon often blocks it). Custom blocks keep that image URL; they are not imported into the Media Library on post save.
 
 Saved units and custom blocks use the same front-end markup, so a grid looks the same either way.
 
