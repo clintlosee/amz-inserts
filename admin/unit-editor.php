@@ -100,9 +100,10 @@ class Amz_Inserts_Unit_Editor {
 	public static function render( WP_Post $post ): void {
 		wp_nonce_field( 'amz_inserts_unit', 'amz_inserts_unit_nonce' );
 
-		$display = Amz_Inserts_Cpt_Unit::get_display( (int) $post->ID );
-		$columns = Amz_Inserts_Cpt_Unit::get_columns( (int) $post->ID );
-		$items   = Amz_Inserts_Cpt_Unit::get_items( (int) $post->ID );
+		$display   = Amz_Inserts_Cpt_Unit::get_display( (int) $post->ID );
+		$columns   = Amz_Inserts_Cpt_Unit::get_columns( (int) $post->ID );
+		$items     = Amz_Inserts_Cpt_Unit::get_items( (int) $post->ID );
+		$cta_label = Amz_Inserts_Cpt_Unit::get_cta_label( (int) $post->ID );
 		if ( empty( $items ) ) {
 			$items = array(
 				array(
@@ -134,6 +135,11 @@ class Amz_Inserts_Unit_Editor {
 				<?php endforeach; ?>
 			</select>
 			<span class="description"><?php esc_html_e( '2 columns on phones, then 3, then this many on large screens.', 'amz-inserts' ); ?></span>
+		</p>
+		<p>
+			<label for="amz_cta_label"><strong><?php esc_html_e( 'CTA label', 'amz-inserts' ); ?></strong></label>
+			<input type="text" class="widefat" name="amz_cta_label" id="amz_cta_label" value="<?php echo esc_attr( $cta_label ); ?>" />
+			<span class="description"><?php esc_html_e( 'Optional. Leave empty to use the default CTA label from Settings.', 'amz-inserts' ); ?></span>
 		</p>
 
 		<div id="amz-inserts-items">
@@ -231,12 +237,14 @@ class Amz_Inserts_Unit_Editor {
 			$columns = 4;
 		}
 
-		$items = Amz_Inserts_Cpt_Unit::sanitize_items( wp_unslash( $_POST['amz_items'] ?? array() ) );
+		$items     = Amz_Inserts_Cpt_Unit::sanitize_items( wp_unslash( $_POST['amz_items'] ?? array() ) );
+		$cta_label = sanitize_text_field( wp_unslash( $_POST['amz_cta_label'] ?? '' ) );
 
 		$items = Amz_Inserts_Image::ensure_items( $items, $post_id );
 
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_DISPLAY, $display );
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_COLUMNS, $columns );
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_ITEMS, $items );
+		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_CTA_LABEL, $cta_label );
 	}
 }

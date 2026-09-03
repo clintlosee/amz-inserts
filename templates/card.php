@@ -10,4 +10,5 @@ $item = $item ?? $items[0];
 	<?php if ( $item['title'] !== '' ) : ?>
 		<span class="amz-inserts__title"><?php echo esc_html( $item['title'] ); ?></span>
 	<?php endif; ?>
+	<span class="amz-inserts__cta"><?php echo esc_html( $cta_label ); ?></span>
 </a>

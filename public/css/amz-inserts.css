@@ -61,6 +61,30 @@
 	min-height: 2.6em;
 }
 
+.amz-inserts__cta {
+	align-self: flex-start;
+	margin-top: 0.75em;
+	padding: 0.5em 0.85em;
+	border: 1px solid #c45500;
+	border-radius: 4px;
+	background: #ff9900;
+	color: #111;
+	font-size: 0.875em;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+}
+
+.amz-inserts__card:hover .amz-inserts__cta,
+.amz-inserts__card:focus-visible .amz-inserts__cta {
+	background: #e88b00;
+}
+
+.amz-inserts__card:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 3px;
+}
+
 .amz-inserts__disclosure {
 	font-size: 0.85em;
 	opacity: 0.8;
