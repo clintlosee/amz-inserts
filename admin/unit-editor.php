@@ -54,15 +54,16 @@ class Amz_Inserts_Unit_Editor {
 			AMZ_INSERTS_VERSION
 		);
 
-		if ( 'edit.php' === $hook ) {
-			return;
+		$deps = array( 'jquery' );
+		if ( 'edit.php' !== $hook ) {
+			wp_enqueue_media();
+			$deps[] = 'wp-api-fetch';
 		}
 
-		wp_enqueue_media();
 		wp_enqueue_script(
 			'amz-inserts-unit-editor',
 			AMZ_INSERTS_URL . 'admin/js/unit-editor.js',
-			array( 'jquery', 'wp-api-fetch' ),
+			$deps,
 			AMZ_INSERTS_VERSION,
 			true
 		);
@@ -78,6 +79,7 @@ class Amz_Inserts_Unit_Editor {
 					'fetchFailed'   => __( 'Could not fetch details. Paste an image URL or select an image.', 'amz-inserts' ),
 					'invalidUrl'    => __( 'Enter an Amazon URL first.', 'amz-inserts' ),
 					'imageFromAsin' => __( 'Using the standard Amazon image for this ASIN.', 'amz-inserts' ),
+					'copied'        => __( 'Copied', 'amz-inserts' ),
 				),
 			)
 		);
@@ -89,12 +91,27 @@ class Amz_Inserts_Unit_Editor {
 			return;
 		}
 
-		$shortcode = Amz_Inserts_Cpt_Unit::shortcode_for( (int) $post->ID );
-		printf(
-			'<p><code class="amz-inserts-shortcode">%s</code></p><p class="description">%s</p>',
-			esc_html( $shortcode ),
-			esc_html__( 'Paste this into a classic post, or choose this unit from the Amazon Insert block.', 'amz-inserts' )
-		);
+		echo '<p>' . Amz_Inserts_Cpt_Unit::shortcode_copy_markup( (int) $post->ID ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in helper
+		echo '<p class="description">' . esc_html__( 'Click to copy. Paste this into a classic post, or choose this unit from the Amazon Insert block.', 'amz-inserts' ) . '</p>';
+		if ( current_user_can( 'manage_options' ) ) {
+			echo '<p class="description">' . wp_kses(
+				sprintf(
+					/* translators: %s: settings page URL */
+					__( 'Need a one-off link without a unit? Use <code>[amz_link asin="B0XXXXXXXX"]</code> with the product ASIN. Examples are on <a href="%s">Settings</a>.', 'amz-inserts' ),
+					esc_url( admin_url( 'edit.php?post_type=' . Amz_Inserts_Cpt_Unit::POST_TYPE . '&page=amz-inserts-settings' ) )
+				),
+				array(
+					'code' => array(),
+					'a'    => array( 'href' => array() ),
+				)
+			) . '</p>';
+		} else {
+			echo '<p class="description">' . wp_kses(
+				__( 'Need a one-off link without a unit? Use <code>[amz_link asin="B0XXXXXXXX"]</code> with the 10-character product ASIN (not an amzn.to short link).', 'amz-inserts' ),
+				array( 'code' => array() )
+			) . '</p>';
+		}
+		Amz_Inserts_Cpt_Unit::render_usage_summary( (int) $post->ID );
 	}
 
 	public static function render( WP_Post $post ): void {
@@ -240,6 +257,7 @@ class Amz_Inserts_Unit_Editor {
 		$items     = Amz_Inserts_Cpt_Unit::sanitize_items( wp_unslash( $_POST['amz_items'] ?? array() ) );
 		$cta_label = sanitize_text_field( wp_unslash( $_POST['amz_cta_label'] ?? '' ) );
 
+		$items = Amz_Inserts_Fetch::expand_item_urls( $items );
 		$items = Amz_Inserts_Image::ensure_items( $items, $post_id );
 
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_DISPLAY, $display );

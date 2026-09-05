@@ -65,6 +65,21 @@ class Amz_Inserts_Url {
 	}
 
 	/**
+	 * Shorteners such as amzn.to / a.co. A ?tag= on these is not reliable
+	 * Associates tracking; expand first, then tag the product URL.
+	 */
+	public static function is_short_url( string $url ): bool {
+		return self::host_matches(
+			$url,
+			array(
+				'amzn.to',
+				'amzn.com',
+				'a.co',
+			)
+		);
+	}
+
+	/**
 	 * True for image addresses we are willing to download and sideload.
 	 */
 	public static function is_amazon_image_url( string $url ): bool {
@@ -112,14 +127,19 @@ class Amz_Inserts_Url {
 	}
 
 	public static function with_tag( string $url, string $tag = '' ): string {
+		if ( '' === $url ) {
+			return '';
+		}
+
+		if ( self::is_short_url( $url ) ) {
+			return $url;
+		}
+
 		if ( '' === $tag ) {
 			$tag = (string) Amz_Inserts_Settings::get( 'associate_tag', '' );
 		}
 
 		$tag = sanitize_text_field( $tag );
-		if ( '' === $url ) {
-			return '';
-		}
 
 		$parts = wp_parse_url( $url );
 		if ( ! is_array( $parts ) || empty( $parts['host'] ) ) {
@@ -181,12 +201,33 @@ class Amz_Inserts_Url {
 		return $url;
 	}
 
-	public static function asin_image_url( string $asin ): string {
+	/**
+	 * 10-character ASIN or empty.
+	 */
+	public static function sanitize_asin( string $asin ): string {
 		$asin = preg_replace( '/[^A-Z0-9]/', '', strtoupper( $asin ) ) ?? '';
-		if ( 10 !== strlen( $asin ) ) {
+
+		return 10 === strlen( $asin ) ? $asin : '';
+	}
+
+	public static function asin_image_url( string $asin ): string {
+		$asin = self::sanitize_asin( $asin );
+		if ( '' === $asin ) {
 			return '';
 		}
 
 		return 'https://m.media-amazon.com/images/P/' . $asin . '.01._SCLZZZZZZZ_.jpg';
+	}
+
+	/**
+	 * Product URL for an ASIN on amazon.com. There is no marketplace setting.
+	 */
+	public static function from_asin( string $asin ): string {
+		$asin = self::sanitize_asin( $asin );
+		if ( '' === $asin ) {
+			return '';
+		}
+
+		return 'https://www.amazon.com/dp/' . $asin;
 	}
 }

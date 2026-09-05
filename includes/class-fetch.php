@@ -23,6 +23,32 @@ class Amz_Inserts_Fetch {
 				'methods'             => 'GET',
 				'permission_callback' => array( self::class, 'can_edit' ),
 				'callback'            => array( self::class, 'units' ),
+				'args'                => array(
+					'search'   => array(
+						'type'              => 'string',
+						'required'          => false,
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'per_page' => array(
+						'type'    => 'integer',
+						'default' => 100,
+						'minimum' => 1,
+						'maximum' => 100,
+					),
+					'page'     => array(
+						'type'    => 'integer',
+						'default' => 1,
+						'minimum' => 1,
+					),
+					'offset'   => array(
+						'type'    => 'integer',
+						'minimum' => 0,
+					),
+					'include'  => array(
+						'type'    => 'integer',
+						'minimum' => 0,
+					),
+				),
 			)
 		);
 
@@ -47,26 +73,96 @@ class Amz_Inserts_Fetch {
 		return current_user_can( 'edit_posts' );
 	}
 
-	public static function units(): WP_REST_Response {
-		$posts = get_posts(
-			array(
-				'post_type'      => Amz_Inserts_Cpt_Unit::POST_TYPE,
-				'post_status'    => 'publish',
-				'posts_per_page' => 100,
-				'orderby'        => 'title',
-				'order'          => 'ASC',
-			)
-		);
+	public static function units( WP_REST_Request $request ): WP_REST_Response {
+		$search   = trim( (string) $request->get_param( 'search' ) );
+		$per_page = absint( $request->get_param( 'per_page' ) );
+		$page     = absint( $request->get_param( 'page' ) );
+		$include  = absint( $request->get_param( 'include' ) );
 
-		$data = array();
-		foreach ( $posts as $post ) {
-			$data[] = array(
-				'id'    => (int) $post->ID,
-				'title' => $post->post_title,
-			);
+		if ( $per_page < 1 ) {
+			$per_page = 100;
+		}
+		$per_page = min( $per_page, 100 );
+		if ( $page < 1 ) {
+			$page = 1;
 		}
 
-		return rest_ensure_response( $data );
+		if ( ctype_digit( $search ) ) {
+			$include = $include > 0 ? $include : (int) $search;
+		}
+
+		$args = array(
+			'post_type'              => Amz_Inserts_Cpt_Unit::POST_TYPE,
+			'post_status'            => 'publish',
+			'posts_per_page'         => $per_page,
+			'orderby'                => 'title',
+			'order'                  => 'ASC',
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		);
+
+		if ( '' !== $search ) {
+			$args['s']              = $search;
+			$args['search_columns'] = array( 'post_title' );
+		}
+
+		$offset = $request->get_param( 'offset' );
+		if ( null !== $offset && '' !== $offset ) {
+			$args['offset'] = absint( $offset );
+		} else {
+			$args['paged'] = $page;
+		}
+
+		$query = new WP_Query( $args );
+		$data  = array();
+		foreach ( $query->posts as $post ) {
+			$data[] = self::unit_payload( $post );
+		}
+
+		if ( $include > 0 ) {
+			$data = self::ensure_unit( $data, $include );
+		}
+
+		$response = rest_ensure_response( $data );
+		$response->header( 'X-WP-Total', (string) (int) $query->found_posts );
+		$response->header( 'X-WP-TotalPages', (string) (int) $query->max_num_pages );
+
+		return $response;
+	}
+
+	/**
+	 * @return array{id:int,title:string}
+	 */
+	private static function unit_payload( WP_Post $post ): array {
+		return array(
+			'id'    => (int) $post->ID,
+			'title' => $post->post_title,
+		);
+	}
+
+	/**
+	 * @param array<int, array{id:int,title:string}> $data
+	 * @return array<int, array{id:int,title:string}>
+	 */
+	private static function ensure_unit( array $data, int $id ): array {
+		foreach ( $data as $row ) {
+			if ( $id === (int) $row['id'] ) {
+				return $data;
+			}
+		}
+
+		$post = get_post( $id );
+		if ( ! $post || Amz_Inserts_Cpt_Unit::POST_TYPE !== $post->post_type ) {
+			return $data;
+		}
+
+		if ( in_array( $post->post_status, array( 'trash', 'auto-draft' ), true ) ) {
+			return $data;
+		}
+
+		array_unshift( $data, self::unit_payload( $post ) );
+
+		return $data;
 	}
 
 	public static function preview( WP_REST_Request $request ): WP_REST_Response {
@@ -81,49 +177,34 @@ class Amz_Inserts_Fetch {
 			);
 		}
 
-		$asin         = Amz_Inserts_Url::extract_asin( $url );
-		$tagged_url   = Amz_Inserts_Url::with_tag( $url );
+		$page         = self::fetch_amazon_page( $url );
+		$url          = $page['url'];
+		$html         = $page['html'];
+		$asin         = $page['asin'];
 		$title        = '';
 		$image_url    = '';
 		$image_source = '';
 		$fetched      = false;
 
-		$remote = self::request( $url );
-		if ( ! is_wp_error( $remote ) ) {
-			$html      = (string) wp_remote_retrieve_body( $remote );
-			$final_url = self::effective_url( $remote, $url );
-			$final_url = Amz_Inserts_Url::normalize( $final_url );
+		if ( '' !== $html ) {
+			$title = self::meta_content( $html, 'og:title' );
+			if ( '' === $title ) {
+				$title = self::page_title( $html );
+			}
 
-			// If final URL after redirects is not an Amazon URL, discard fetched data
-			if ( '' === $final_url ) {
-				$html      = '';
-				$final_url = $url;
-			} else {
+			if ( '' === $asin ) {
+				$asin = self::asin_from_html( $html );
+			}
+
+			$image_url = Amz_Inserts_Url::normalize_image_url( self::meta_content( $html, 'og:image' ) );
+			if ( '' !== $image_url ) {
+				$image_source = 'og';
 				if ( '' === $asin ) {
-					$asin = Amz_Inserts_Url::extract_asin( $final_url );
+					$asin = Amz_Inserts_Url::extract_asin( $image_url );
 				}
 			}
 
-			if ( '' !== $html ) {
-				$title = self::meta_content( $html, 'og:title' );
-				if ( '' === $title ) {
-					$title = self::page_title( $html );
-				}
-
-				if ( '' === $asin ) {
-					$asin = self::asin_from_html( $html );
-				}
-
-				$image_url = Amz_Inserts_Url::normalize_image_url( self::meta_content( $html, 'og:image' ) );
-				if ( '' !== $image_url ) {
-					$image_source = 'og';
-					if ( '' === $asin ) {
-						$asin = Amz_Inserts_Url::extract_asin( $image_url );
-					}
-				}
-
-				$fetched = ( '' !== $title || '' !== $image_url );
-			}
+			$fetched = ( '' !== $title || '' !== $image_url );
 		}
 
 		if ( '' === $image_url && '' !== $asin ) {
@@ -136,7 +217,7 @@ class Amz_Inserts_Fetch {
 				'ok'           => true,
 				'fetched'      => $fetched || '' !== $image_url,
 				'url'          => $url,
-				'tagged_url'   => $tagged_url,
+				'tagged_url'   => Amz_Inserts_Url::with_tag( $url ),
 				'asin'         => $asin,
 				'title'        => $title,
 				'image_id'     => 0,
@@ -147,9 +228,105 @@ class Amz_Inserts_Fetch {
 	}
 
 	/**
-	 * Last resort ASIN lookup for short links whose path carries no ASIN.
+	 * Best-effort: follow a short Amazon link and store the product URL.
+	 * Failure leaves the original URL; never blocks a save.
+	 *
+	 * @param array $items Sanitized items.
 	 */
-	private static function asin_from_html( string $html ): string {
+	public static function expand_item_urls( array $items ): array {
+		foreach ( $items as $index => $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$url = (string) ( $item['url'] ?? '' );
+			if ( '' === $url || ! Amz_Inserts_Url::is_short_url( $url ) ) {
+				continue;
+			}
+
+			try {
+				$expanded = self::expand_url( $url );
+			} catch ( Throwable ) {
+				continue;
+			}
+
+			$items[ $index ]['url'] = $expanded;
+			if ( empty( $items[ $index ]['asin'] ) ) {
+				$items[ $index ]['asin'] = Amz_Inserts_Url::extract_asin( $expanded );
+			}
+		}
+
+		return $items;
+	}
+
+	public static function expand_url( string $url ): string {
+		$url = Amz_Inserts_Url::normalize( $url );
+		if ( '' === $url || ! Amz_Inserts_Url::is_short_url( $url ) ) {
+			return $url;
+		}
+
+		return self::fetch_amazon_page( $url )['url'];
+	}
+
+	/**
+	 * Follow redirects with the existing Fetch client. Keep the original URL
+	 * when the destination is off the Amazon allowlist (SSRF guard).
+	 *
+	 * @return array{url:string,html:string,asin:string}
+	 */
+	private static function fetch_amazon_page( string $url ): array {
+		$asin   = Amz_Inserts_Url::extract_asin( $url );
+		$remote = self::request( $url );
+		if ( is_wp_error( $remote ) ) {
+			return array(
+				'url'  => $url,
+				'html' => '',
+				'asin' => $asin,
+			);
+		}
+
+		$html      = (string) wp_remote_retrieve_body( $remote );
+		$final_url = Amz_Inserts_Url::normalize( self::effective_url( $remote, $url ) );
+
+		// If final URL after redirects is not an Amazon URL, discard fetched data.
+		if ( '' === $final_url ) {
+			return array(
+				'url'  => $url,
+				'html' => '',
+				'asin' => $asin,
+			);
+		}
+
+		if ( '' === $asin ) {
+			$asin = Amz_Inserts_Url::extract_asin( $final_url );
+		}
+
+		$product_url = $url;
+		if ( Amz_Inserts_Url::is_short_url( $url ) ) {
+			$from_html = self::product_url_from_html( $html );
+			if ( '' !== $from_html ) {
+				$product_url = $from_html;
+			} elseif ( ! Amz_Inserts_Url::is_short_url( $final_url ) ) {
+				$product_url = $final_url;
+			}
+		}
+
+		if ( '' === $asin ) {
+			$asin = Amz_Inserts_Url::extract_asin( $product_url );
+		}
+
+		return array(
+			'url'  => $product_url,
+			'html' => $html,
+			'asin' => $asin,
+		);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private static function html_urls( string $html ): array {
+		$urls     = array();
 		$patterns = array(
 			'#<link[^>]+rel=[\'"]canonical[\'"][^>]+href=[\'"]([^\'"]+)[\'"]#i',
 			'#<meta[^>]+(?:property|name)=[\'"]og:url[\'"][^>]+content=[\'"]([^\'"]+)[\'"]#i',
@@ -157,10 +334,42 @@ class Amz_Inserts_Fetch {
 
 		foreach ( $patterns as $pattern ) {
 			if ( preg_match( $pattern, $html, $matches ) ) {
-				$asin = Amz_Inserts_Url::extract_asin( html_entity_decode( $matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
-				if ( '' !== $asin ) {
-					return $asin;
-				}
+				$urls[] = html_entity_decode( $matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			}
+		}
+
+		return $urls;
+	}
+
+	private static function product_url_from_html( string $html ): string {
+		$fallback = '';
+
+		foreach ( self::html_urls( $html ) as $candidate ) {
+			$candidate = Amz_Inserts_Url::normalize( $candidate );
+			if ( '' === $candidate || Amz_Inserts_Url::is_short_url( $candidate ) ) {
+				continue;
+			}
+
+			if ( '' !== Amz_Inserts_Url::extract_asin( $candidate ) ) {
+				return $candidate;
+			}
+
+			if ( '' === $fallback ) {
+				$fallback = $candidate;
+			}
+		}
+
+		return $fallback;
+	}
+
+	/**
+	 * Last resort ASIN lookup for short links whose path carries no ASIN.
+	 */
+	private static function asin_from_html( string $html ): string {
+		foreach ( self::html_urls( $html ) as $candidate ) {
+			$asin = Amz_Inserts_Url::extract_asin( $candidate );
+			if ( '' !== $asin ) {
+				return $asin;
 			}
 		}
 
