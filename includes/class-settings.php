@@ -174,6 +174,33 @@ class Amz_Inserts_Settings {
 				submit_button();
 				?>
 			</form>
+			<?php self::render_shortcode_help(); ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * In-admin reference for [amz_unit] and [amz_link].
+	 */
+	public static function render_shortcode_help(): void {
+		$examples = '[amz_link asin="B0EXAMPLE1" title="Product name"]' . "\n"
+			. '[amz_link asin="B0EXAMPLE1" title="Product name" display="button"]' . "\n"
+			. '[amz_link asin="B0EXAMPLE1" title="Product name" display="card"]' . "\n"
+			. '[amz_link url="https://www.amazon.com/dp/B0EXAMPLE1" title="Product name"]';
+		?>
+		<div class="card" style="max-width: 52em; padding: 12px 16px 16px;">
+			<h2><?php esc_html_e( 'Shortcode reference', 'amz-inserts' ); ?></h2>
+			<p><?php esc_html_e( 'Paste these into a classic post. In the block editor, add the Amazon Insert block to pick a saved unit or build a custom insert.', 'amz-inserts' ); ?></p>
+
+			<p><strong><?php esc_html_e( 'Saved unit', 'amz-inserts' ); ?></strong></p>
+			<p><code>[amz_unit id="123"]</code></p>
+			<p class="description"><?php esc_html_e( 'Copy the real shortcode from All Units or the Insert box on a unit.', 'amz-inserts' ); ?></p>
+
+			<p><strong><?php esc_html_e( 'One-off link (no saved unit)', 'amz-inserts' ); ?></strong></p>
+			<p><?php esc_html_e( 'Use the 10-character ASIN from the Amazon product page. The Associate tag on this screen is added automatically. amazon.com is the default marketplace.', 'amz-inserts' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Do not paste amzn.to / a.co short links into [amz_link] — those are not expanded, so tracking may not apply. Short links are fine on a saved unit if you Fetch or save so they can be expanded first.', 'amz-inserts' ); ?></p>
+			<pre style="background:#f6f7f7;padding:12px;overflow:auto;"><?php echo esc_html( $examples ); ?></pre>
+			<p class="description"><?php esc_html_e( 'display can be text (default), button, image, or card. Optional: image_url, image_id, cta.', 'amz-inserts' ); ?></p>
 		</div>
 		<?php
 	}

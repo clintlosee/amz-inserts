@@ -84,7 +84,7 @@ Examples:
 [amz_link url="https://www.amazon.com/dp/B0EXAMPLE1" title="Widget" display="image" image_url="https://m.media-amazon.com/images/I/example.jpg"]
 ```
 
-When `url` is omitted, the shortcode builds `https://www.amazon.com/dp/{ASIN}`. There is no marketplace setting; amazon.com is the default. Links go through the same normalize / Associate tag / `rel` handling as saved units. Missing or invalid `url`/`asin` renders nothing. Prefer a product URL or ASIN: short links (`amzn.to`, `a.co`, `amzn.com`) are not expanded when the shortcode renders, so Associates tagging is skipped until the URL is a full product page.
+When `url` is omitted, the shortcode builds `https://www.amazon.com/dp/{ASIN}`. There is no marketplace setting; amazon.com is the default. Links go through the same normalize / Associate tag / `rel` handling as saved units. Missing or invalid `url`/`asin` renders nothing. Prefer a product URL or ASIN: short links (`amzn.to`, `a.co`, `amzn.com`) are not expanded when the shortcode renders, so Associates tagging is skipped until the URL is a full product page. The same examples appear on **Amazon Inserts → Settings**.
 
 Text, image, and card reuse the same templates as `[amz_unit]`. `button` is a thin CTA styled like the card button.
 
