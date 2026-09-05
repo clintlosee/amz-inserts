@@ -29,6 +29,20 @@
 	display: block;
 }
 
+.amz-inserts-copy {
+	cursor: pointer;
+	text-decoration: none;
+}
+
 .amz-inserts-shortcode {
 	user-select: all;
+}
+
+.amz-inserts-copy.is-copied .amz-inserts-shortcode {
+	background: #d1f0d5;
+}
+
+.amz-inserts-used-in {
+	margin: 0.25em 0 0.5em;
+	padding-left: 1.25em;
 }
