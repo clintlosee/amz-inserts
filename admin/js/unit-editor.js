@@ -1,6 +1,47 @@
 (function ($) {
 	'use strict';
 
+	function copyText(text) {
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			return navigator.clipboard.writeText(text);
+		}
+
+		return new Promise(function (resolve, reject) {
+			var input = document.createElement('textarea');
+			input.value = text;
+			input.setAttribute('readonly', '');
+			input.style.position = 'absolute';
+			input.style.left = '-9999px';
+			document.body.appendChild(input);
+			input.select();
+			try {
+				document.execCommand('copy') ? resolve() : reject();
+			} catch (err) {
+				reject(err);
+			}
+			document.body.removeChild(input);
+		});
+	}
+
+	$(document).on('click', '.amz-inserts-copy', function (event) {
+		event.preventDefault();
+		var $btn = $(this);
+		var text = String($btn.attr('data-shortcode') || $btn.text() || '').trim();
+		if (!text) {
+			return;
+		}
+
+		copyText(text).then(function () {
+			var prev = $btn.attr('title');
+			$btn.addClass('is-copied');
+			$btn.attr('title', (window.amzInsertsAdmin && amzInsertsAdmin.i18n && amzInsertsAdmin.i18n.copied) || 'Copied');
+			window.setTimeout(function () {
+				$btn.removeClass('is-copied');
+				$btn.attr('title', prev);
+			}, 1200);
+		}).catch(function () {});
+	});
+
 	function nextIndex() {
 		var max = -1;
 		$('#amz-inserts-items .amz-inserts-item').each(function () {
