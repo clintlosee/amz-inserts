@@ -181,12 +181,33 @@ class Amz_Inserts_Url {
 		return $url;
 	}
 
-	public static function asin_image_url( string $asin ): string {
+	/**
+	 * 10-character ASIN or empty.
+	 */
+	public static function sanitize_asin( string $asin ): string {
 		$asin = preg_replace( '/[^A-Z0-9]/', '', strtoupper( $asin ) ) ?? '';
-		if ( 10 !== strlen( $asin ) ) {
+
+		return 10 === strlen( $asin ) ? $asin : '';
+	}
+
+	public static function asin_image_url( string $asin ): string {
+		$asin = self::sanitize_asin( $asin );
+		if ( '' === $asin ) {
 			return '';
 		}
 
 		return 'https://m.media-amazon.com/images/P/' . $asin . '.01._SCLZZZZZZZ_.jpg';
+	}
+
+	/**
+	 * Product URL for an ASIN on amazon.com. There is no marketplace setting.
+	 */
+	public static function from_asin( string $asin ): string {
+		$asin = self::sanitize_asin( $asin );
+		if ( '' === $asin ) {
+			return '';
+		}
+
+		return 'https://www.amazon.com/dp/' . $asin;
 	}
 }

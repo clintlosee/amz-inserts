@@ -48,7 +48,7 @@ To turn the copying off entirely, return `false` from the `amz_inserts_sideload_
 
 ## Insert into a post
 
-**Classic editor:** paste the shortcode where you want the insert.
+**Classic editor:** paste `[amz_unit]` or `[amz_link]` where you want the insert.
 
 **Block editor:** add the **Amazon Insert** block.
 
@@ -58,6 +58,33 @@ To turn the copying off entirely, return `false` from the `amz_inserts_sideload_
 Saved units and custom blocks use the same front-end markup, so a grid looks the same either way.
 
 Cards are fully clickable (image, title, and CTA button). Links open Amazon in a new tab with `rel="nofollow sponsored noopener"`.
+
+## One-off `[amz_link]` shortcode
+
+For a single Amazon link without creating a saved unit, use `[amz_link]`. Default display is a **text** link. Attributes:
+
+| Attribute | Purpose |
+| --- | --- |
+| `url` | Amazon product URL. Optional if `asin` is set. |
+| `asin` | 10-character ASIN. Used to build a URL when `url` is omitted, and for the image fallback. |
+| `title` | Link or card text. Text display falls back to the URL if this is empty. |
+| `display` | `text` (default), `button`, `image`, or `card`. |
+| `image_url` / `image_id` | Optional image for `image` and `card`. Otherwise the ASIN image is used when an ASIN is known. |
+| `cta` | Optional button/card label. Otherwise the global default CTA is used. For `button`, `title` is used when `cta` is omitted. |
+
+Examples:
+
+```
+[amz_link url="https://www.amazon.com/dp/B0EXAMPLE1" title="Widget"]
+[amz_link asin="B0EXAMPLE1" title="Widget"]
+[amz_link asin="B0EXAMPLE1" title="Widget" display="button"]
+[amz_link asin="B0EXAMPLE1" title="Widget" display="card" cta="See it on Amazon"]
+[amz_link url="https://www.amazon.com/dp/B0EXAMPLE1" title="Widget" display="image" image_url="https://m.media-amazon.com/images/I/example.jpg"]
+```
+
+When `url` is omitted, the shortcode builds `https://www.amazon.com/dp/{ASIN}`. There is no marketplace setting; amazon.com is the default. Links go through the same normalize / Associate tag / `rel` handling as saved units. Missing or invalid `url`/`asin` renders nothing.
+
+Text, image, and card reuse the same templates as `[amz_unit]`. `button` is a thin CTA styled like the card button.
 
 ## What v1 does not do
 
