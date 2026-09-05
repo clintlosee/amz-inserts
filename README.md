@@ -10,7 +10,7 @@ Requires WordPress 6.4+ and PHP 8.1+.
 
 1. Copy this folder into `wp-content/plugins/amz-plugin` (or `amazon-inserts`).
 2. In wp-admin, activate **Amazon Inserts**.
-3. Open **Amazon Inserts → Settings** and save your Associate tag (for example `yourname-20`). Links that do not already include `tag=` will use this value. You can also customize the default CTA button label used by cards and grids.
+3. Open **Amazon Inserts → Settings** and save your Associate tag (for example `yourname-20`). Full Amazon product URLs that do not already include `tag=` will use this value. Short links (`amzn.to`, `a.co`, `amzn.com`) are expanded to the product page first; the tag is not applied to the short URL itself. You can also customize the default CTA button label used by cards and grids.
 
 Amazon and FTC rules still require a clear affiliate disclosure on the site. A footer notice is enough. Optionally enable **Show disclosure under inserts** if you also want a line under each insert.
 
@@ -37,7 +37,7 @@ Hotlinked Amazon images rot over time, so the plugin tries to end up with a copy
 
 - **Fetch from URL** previews the product page's `og:image`. When Amazon blocks the request or the page has no image, it falls back to Amazon's standard image address for the ASIN. You can replace the suggested Image URL before saving.
 - Saving the unit downloads the final Image URL into the Media Library and stores the attachment ID. Units created before this version pick up a local copy the next time you save them.
-- The ASIN is parsed from the product URL, and, when the page is readable, from its canonical link — short links like `amzn.to` and `a.co` resolve to a real ASIN this way.
+- The ASIN is parsed from the product URL, and, when the page is readable, from its canonical link. Short links like `amzn.to` and `a.co` are expanded to the final Amazon product URL (and ASIN) when Fetch or unit save can follow the redirect. If Amazon blocks that request, the short URL is kept and the unit still saves; Associates tagging may not apply until the link can be expanded.
 - Only images on Amazon's own hosts are downloaded. If you paste an image address of your own, it is left exactly as you typed it.
 - Nothing here can cost you a unit. A failed download leaves the URL, title, and ASIN untouched and the unit saves normally; the front end then falls back to the stored image URL, and finally to the ASIN image address. A URL that fails is not retried for six hours.
 - Manually selected Media Library images are preserved. Images previously imported by the plugin are not re-downloaded unless you change their Image URL.
@@ -53,7 +53,7 @@ To turn the copying off entirely, return `false` from the `amz_inserts_sideload_
 **Block editor:** add the **Amazon Insert** block.
 
 - **Saved unit** — pick a unit you already published.
-- **Custom** — one-off text, image, card, or grid in this post without saving a unit. Paste an Amazon URL and optionally click **Fetch from URL** for a best-effort title, image URL, and ASIN (same lookup as saved units; Amazon often blocks it). Custom blocks keep that image URL; they are not imported into the Media Library on post save.
+- **Custom** — one-off text, image, card, or grid in this post without saving a unit. Paste an Amazon URL and optionally click **Fetch from URL** for a best-effort title, image URL, and ASIN (same lookup as saved units; Amazon often blocks it). Fetch also expands short Amazon links to the product URL and applies the Associate tag there. Custom blocks keep that image URL; they are not imported into the Media Library on post save.
 
 Saved units and custom blocks use the same front-end markup, so a grid looks the same either way.
 
