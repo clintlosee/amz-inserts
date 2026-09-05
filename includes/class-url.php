@@ -65,6 +65,21 @@ class Amz_Inserts_Url {
 	}
 
 	/**
+	 * Shorteners such as amzn.to / a.co. A ?tag= on these is not reliable
+	 * Associates tracking; expand first, then tag the product URL.
+	 */
+	public static function is_short_url( string $url ): bool {
+		return self::host_matches(
+			$url,
+			array(
+				'amzn.to',
+				'amzn.com',
+				'a.co',
+			)
+		);
+	}
+
+	/**
 	 * True for image addresses we are willing to download and sideload.
 	 */
 	public static function is_amazon_image_url( string $url ): bool {
@@ -112,14 +127,19 @@ class Amz_Inserts_Url {
 	}
 
 	public static function with_tag( string $url, string $tag = '' ): string {
+		if ( '' === $url ) {
+			return '';
+		}
+
+		if ( self::is_short_url( $url ) ) {
+			return $url;
+		}
+
 		if ( '' === $tag ) {
 			$tag = (string) Amz_Inserts_Settings::get( 'associate_tag', '' );
 		}
 
 		$tag = sanitize_text_field( $tag );
-		if ( '' === $url ) {
-			return '';
-		}
 
 		$parts = wp_parse_url( $url );
 		if ( ! is_array( $parts ) || empty( $parts['host'] ) ) {
