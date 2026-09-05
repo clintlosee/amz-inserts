@@ -240,6 +240,7 @@ class Amz_Inserts_Unit_Editor {
 		$items     = Amz_Inserts_Cpt_Unit::sanitize_items( wp_unslash( $_POST['amz_items'] ?? array() ) );
 		$cta_label = sanitize_text_field( wp_unslash( $_POST['amz_cta_label'] ?? '' ) );
 
+		$items = Amz_Inserts_Fetch::expand_item_urls( $items );
 		$items = Amz_Inserts_Image::ensure_items( $items, $post_id );
 
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_DISPLAY, $display );
