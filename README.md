@@ -25,11 +25,13 @@ Amazon and FTC rules still require a clear affiliate disclosure on the site. A f
    - Paste an **Image URL** (right-click the product photo on Amazon → Copy image address), or
    - Click **Fetch from URL** (best-effort; Amazon often blocks this, and the plugin falls back to the ASIN image), or
    - **Select image** from the Media Library if you prefer to upload.
-7. Publish the unit. Copy the shortcode from the list or the **Insert** box, for example:
+7. Publish the unit. Click the shortcode on the All Units list or in the **Insert** box to copy it, for example:
 
 ```
 [amz_unit id="123"]
 ```
+
+The list and the Insert box also show a best-effort **Used in** count of posts and pages that contain that shortcode or an Amazon Insert block pointing at the unit.
 
 ## Product images
 
@@ -52,7 +54,7 @@ To turn the copying off entirely, return `false` from the `amz_inserts_sideload_
 
 **Block editor:** add the **Amazon Insert** block.
 
-- **Saved unit** — pick a unit you already published.
+- **Saved unit** — pick a unit you already published. Type in the field to search by title (or ID). The picker is not limited to the first 100 units.
 - **Custom** — one-off text, image, card, or grid in this post without saving a unit. Paste an Amazon URL and optionally click **Fetch from URL** for a best-effort title, image URL, and ASIN (same lookup as saved units; Amazon often blocks it). Fetch also expands short Amazon links to the product URL and applies the Associate tag there. Custom blocks keep that image URL; they are not imported into the Media Library on post save.
 
 Saved units and custom blocks use the same front-end markup, so a grid looks the same either way.
@@ -82,7 +84,7 @@ Examples:
 [amz_link url="https://www.amazon.com/dp/B0EXAMPLE1" title="Widget" display="image" image_url="https://m.media-amazon.com/images/I/example.jpg"]
 ```
 
-When `url` is omitted, the shortcode builds `https://www.amazon.com/dp/{ASIN}`. There is no marketplace setting; amazon.com is the default. Links go through the same normalize / Associate tag / `rel` handling as saved units. Missing or invalid `url`/`asin` renders nothing.
+When `url` is omitted, the shortcode builds `https://www.amazon.com/dp/{ASIN}`. There is no marketplace setting; amazon.com is the default. Links go through the same normalize / Associate tag / `rel` handling as saved units. Missing or invalid `url`/`asin` renders nothing. Prefer a product URL or ASIN: short links (`amzn.to`, `a.co`, `amzn.com`) are not expanded when the shortcode renders, so Associates tagging is skipped until the URL is a full product page.
 
 Text, image, and card reuse the same templates as `[amz_unit]`. `button` is a thin CTA styled like the card button.
 

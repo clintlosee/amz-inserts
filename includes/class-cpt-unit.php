@@ -134,6 +134,17 @@ class Amz_Inserts_Cpt_Unit {
 		return sprintf( '[amz_unit id="%d"]', $post_id );
 	}
 
+	public static function shortcode_copy_markup( int $post_id ): string {
+		$shortcode = self::shortcode_for( $post_id );
+
+		return sprintf(
+			'<button type="button" class="button-link amz-inserts-copy" data-shortcode="%1$s" title="%3$s"><code class="amz-inserts-shortcode">%2$s</code></button>',
+			esc_attr( $shortcode ),
+			esc_html( $shortcode ),
+			esc_attr__( 'Click to copy', 'amz-inserts' )
+		);
+	}
+
 	public static function columns( array $columns ): array {
 		$new = array();
 		foreach ( $columns as $key => $label ) {
@@ -141,6 +152,7 @@ class Amz_Inserts_Cpt_Unit {
 			if ( 'title' === $key ) {
 				$new['amz_display']   = __( 'Display', 'amz-inserts' );
 				$new['amz_shortcode'] = __( 'Shortcode', 'amz-inserts' );
+				$new['amz_used']      = __( 'Used in', 'amz-inserts' );
 			}
 		}
 
@@ -156,12 +168,161 @@ class Amz_Inserts_Cpt_Unit {
 		}
 
 		if ( 'amz_shortcode' === $column ) {
-			$shortcode = self::shortcode_for( $post_id );
+			echo self::shortcode_copy_markup( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in helper
+			return;
+		}
+
+		if ( 'amz_used' === $column ) {
+			self::render_usage_summary( $post_id, true );
+		}
+	}
+
+	/**
+	 * Best-effort posts/pages that contain this unit's shortcode or block.
+	 *
+	 * @return array{count:int,posts:array<int,array{id:int,title:string,type:string,status:string,edit:string}>}
+	 */
+	public static function usage_for( int $unit_id, int $list_limit = 8 ): array {
+		$posts = self::usage_index()[ $unit_id ] ?? array();
+
+		return array(
+			'count' => count( $posts ),
+			'posts' => array_slice( $posts, 0, max( 0, $list_limit ) ),
+		);
+	}
+
+	public static function render_usage_summary( int $unit_id, bool $compact = false ): void {
+		$usage = self::usage_for( $unit_id, $compact ? 5 : 8 );
+		if ( $usage['count'] < 1 ) {
+			echo $compact ? '&mdash;' : '<p class="description">' . esc_html__( 'Not used in any posts yet.', 'amz-inserts' ) . '</p>';
+			return;
+		}
+
+		if ( $compact ) {
+			$names = array();
+			foreach ( $usage['posts'] as $row ) {
+				$names[] = $row['title'];
+			}
+			$label = sprintf(
+				/* translators: %s: number of posts */
+				_n( '%s post', '%s posts', $usage['count'], 'amz-inserts' ),
+				number_format_i18n( $usage['count'] )
+			);
 			printf(
-				'<code class="amz-inserts-shortcode" data-shortcode="%1$s">%2$s</code>',
-				esc_attr( $shortcode ),
-				esc_html( $shortcode )
+				'<span title="%1$s">%2$s</span>',
+				esc_attr( implode( ', ', $names ) ),
+				esc_html( $label )
+			);
+			return;
+		}
+
+		echo '<p><strong>' . esc_html__( 'Used in', 'amz-inserts' ) . '</strong></p><ul class="amz-inserts-used-in">';
+		foreach ( $usage['posts'] as $row ) {
+			$label = $row['title'];
+			if ( 'publish' !== $row['status'] ) {
+				$label .= ' (' . $row['status'] . ')';
+			}
+			if ( '' !== $row['edit'] ) {
+				printf(
+					'<li><a href="%1$s">%2$s</a></li>',
+					esc_url( $row['edit'] ),
+					esc_html( $label )
+				);
+			} else {
+				printf( '<li>%s</li>', esc_html( $label ) );
+			}
+		}
+		if ( $usage['count'] > count( $usage['posts'] ) ) {
+			printf(
+				'<li>%s</li>',
+				esc_html(
+					sprintf(
+						/* translators: %s: remaining post count */
+						__( 'and %s more', 'amz-inserts' ),
+						number_format_i18n( $usage['count'] - count( $usage['posts'] ) )
+					)
+				)
 			);
 		}
+		echo '</ul>';
+		echo '<p class="description">' . esc_html__( 'Approximate: posts that contain this shortcode or an Amazon Insert block for this unit.', 'amz-inserts' ) . '</p>';
+	}
+
+	/**
+	 * Unit IDs referenced in post content via shortcode or the Amazon Insert block.
+	 *
+	 * @return int[]
+	 */
+	public static function unit_ids_in_content( string $content ): array {
+		$ids = array();
+
+		if ( preg_match_all( '/\[amz_unit\s[^\]]*?\bid=["\']?(\d+)/', $content, $matches ) ) {
+			foreach ( $matches[1] as $id ) {
+				$ids[] = (int) $id;
+			}
+		}
+
+		if ( preg_match_all( '/wp:amz-inserts\/insert\b[^>]*"unitId"\s*:\s*(\d+)/', $content, $matches ) ) {
+			foreach ( $matches[1] as $id ) {
+				$ids[] = (int) $id;
+			}
+		}
+
+		$ids = array_values( array_unique( array_filter( $ids ) ) );
+
+		return $ids;
+	}
+
+	/**
+	 * @return array<int, array<int, array{id:int,title:string,type:string,status:string,edit:string}>>
+	 */
+	private static function usage_index(): array {
+		static $index = null;
+		if ( null !== $index ) {
+			return $index;
+		}
+
+		$index = array();
+		global $wpdb;
+
+		// ponytail: LIKE scan of matching post_content, cap 500 hits; relationship table if this gets slow.
+		$rows = $wpdb->get_results(
+			"SELECT ID, post_title, post_type, post_status, post_content
+			FROM {$wpdb->posts}
+			WHERE post_status IN ('publish','draft','pending','private','future')
+			AND post_type NOT IN ('revision','nav_menu_item','attachment','amz_unit','customize_changeset','oembed_cache','user_request','wp_template','wp_template_part','wp_global_styles','wp_navigation','wp_font_family','wp_font_face')
+			AND (post_content LIKE '%[amz_unit %' OR post_content LIKE '%wp:amz-inserts/insert%')
+			LIMIT 500"
+		);
+
+		if ( ! is_array( $rows ) ) {
+			return $index;
+		}
+
+		foreach ( $rows as $row ) {
+			$unit_ids = self::unit_ids_in_content( (string) $row->post_content );
+			if ( empty( $unit_ids ) ) {
+				continue;
+			}
+
+			$title = (string) $row->post_title;
+			if ( '' === $title ) {
+				$title = __( '(no title)', 'amz-inserts' );
+			}
+
+			$entry = array(
+				'id'     => (int) $row->ID,
+				'title'  => $title,
+				'type'   => (string) $row->post_type,
+				'status' => (string) $row->post_status,
+				'edit'   => (string) get_edit_post_link( (int) $row->ID, 'raw' ),
+			);
+
+			foreach ( $unit_ids as $unit_id ) {
+				$index[ $unit_id ][] = $entry;
+			}
+		}
+
+		return $index;
 	}
 }
