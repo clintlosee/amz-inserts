@@ -74,6 +74,16 @@
 	text-decoration: none;
 }
 
+.amz-inserts--button .amz-inserts__cta {
+	display: inline-block;
+	margin-top: 0;
+}
+
+.amz-inserts--button .amz-inserts__cta:hover,
+.amz-inserts--button .amz-inserts__cta:focus-visible {
+	background: #e88b00;
+}
+
 .amz-inserts__card:hover .amz-inserts__cta,
 .amz-inserts__card:focus-visible .amz-inserts__cta {
 	background: #e88b00;
