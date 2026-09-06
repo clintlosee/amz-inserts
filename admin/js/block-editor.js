@@ -14,6 +14,7 @@
 	var MediaUploadCheck = wp.blockEditor.MediaUploadCheck;
 	var PanelBody = wp.components.PanelBody;
 	var SelectControl = wp.components.SelectControl;
+	var ComboboxControl = wp.components.ComboboxControl;
 	var TextControl = wp.components.TextControl;
 	var Button = wp.components.Button;
 	var RangeControl = wp.components.RangeControl;
@@ -175,6 +176,105 @@
 		);
 	}
 
+	function SavedUnitControl(props) {
+		var unitId = props.unitId || 0;
+		var onChange = props.onChange;
+		var unitsState = useState([]);
+		var units = unitsState[0];
+		var setUnits = unitsState[1];
+		var selectedState = useState(null);
+		var selected = selectedState[0];
+		var setSelected = selectedState[1];
+		var timerRef = useRef(null);
+		var reqRef = useRef(0);
+		var lastSearchRef = useRef(null);
+		var unitIdRef = useRef(unitId);
+		unitIdRef.current = unitId;
+
+		function fetchUnits(search, includeId) {
+			var id = ++reqRef.current;
+			var path = '/amz-inserts/v1/units?per_page=25';
+			if (search) {
+				path += '&search=' + encodeURIComponent(search);
+			}
+			if (includeId) {
+				path += '&include=' + includeId;
+			}
+			return wp
+				.apiFetch({ path: path })
+				.then(function (data) {
+					if (id !== reqRef.current) {
+						return;
+					}
+					setUnits(Array.isArray(data) ? data : []);
+				})
+				.catch(function () {
+					if (id !== reqRef.current) {
+						return;
+					}
+					setUnits([]);
+				});
+		}
+
+		useEffect(function () {
+			lastSearchRef.current = '';
+			fetchUnits('', unitId);
+			return function () {
+				if (timerRef.current) {
+					window.clearTimeout(timerRef.current);
+				}
+			};
+		}, []);
+
+		useEffect(function () {
+			if (!unitId) {
+				setSelected(null);
+				return;
+			}
+			var found = null;
+			units.forEach(function (unit) {
+				if (unit.id === unitId) {
+					found = unit;
+				}
+			});
+			if (found) {
+				setSelected(found);
+			}
+		}, [units, unitId]);
+
+		var options = units.map(function (unit) {
+			return { label: unit.title || '#' + unit.id, value: String(unit.id) };
+		});
+		if (selected && !options.some(function (option) { return option.value === String(selected.id); })) {
+			options.unshift({ label: selected.title || '#' + selected.id, value: String(selected.id) });
+		}
+
+		return el(ComboboxControl, {
+			label: __('Saved unit', 'amz-inserts'),
+			help: __('Type to search by title. Numeric IDs work too.', 'amz-inserts'),
+			value: unitId ? String(unitId) : null,
+			options: options,
+			allowReset: true,
+			__experimentalExpandOnFocus: true,
+			onChange: function (value) {
+				onChange(parseInt(value, 10) || 0);
+			},
+			onFilterValueChange: function (input) {
+				var next = input || '';
+				if (timerRef.current) {
+					window.clearTimeout(timerRef.current);
+				}
+				timerRef.current = window.setTimeout(function () {
+					if (lastSearchRef.current === next) {
+						return;
+					}
+					lastSearchRef.current = next;
+					fetchUnits(next, unitIdRef.current);
+				}, 250);
+			},
+		});
+	}
+
 	registerBlockType('amz-inserts/insert', {
 		apiVersion: 3,
 		title: __('Amazon Insert', 'amz-inserts'),
@@ -193,26 +293,7 @@
 			var attributes = props.attributes;
 			var setAttributes = props.setAttributes;
 			var blockProps = useBlockProps({ className: 'amz-inserts-block' });
-			var unitsState = useState([]);
-			var units = unitsState[0];
-			var setUnits = unitsState[1];
 			var items = attributes.items || [];
-
-			useEffect(function () {
-				wp.apiFetch({ path: '/amz-inserts/v1/units' })
-					.then(function (data) {
-						setUnits(Array.isArray(data) ? data : []);
-					})
-					.catch(function () {
-						setUnits([]);
-					});
-			}, []);
-
-			var unitOptions = [{ label: __('Select a unit…', 'amz-inserts'), value: 0 }].concat(
-				units.map(function (unit) {
-					return { label: unit.title || '#' + unit.id, value: unit.id };
-				})
-			);
 
 			var hasPreview =
 				(attributes.mode === 'saved' && attributes.unitId) ||
@@ -239,12 +320,10 @@
 							},
 						}),
 						attributes.mode === 'saved'
-							? el(SelectControl, {
-									label: __('Saved unit', 'amz-inserts'),
-									value: attributes.unitId || 0,
-									options: unitOptions,
-									onChange: function (value) {
-										setAttributes({ unitId: parseInt(value, 10) || 0 });
+							? el(SavedUnitControl, {
+									unitId: attributes.unitId || 0,
+									onChange: function (unitId) {
+										setAttributes({ unitId: unitId });
 									},
 							  })
 							: null,

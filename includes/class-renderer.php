@@ -66,9 +66,53 @@ class Amz_Inserts_Renderer {
 		);
 	}
 
+	/**
+	 * One-off [amz_link] insert. Empty or invalid url/asin renders nothing.
+	 *
+	 * @param array $atts Shortcode attributes (url, asin, title, display, image_url, image_id, cta).
+	 */
+	public static function render_link( array $atts ): string {
+		$url  = Amz_Inserts_Url::normalize( (string) ( $atts['url'] ?? '' ) );
+		$asin = Amz_Inserts_Url::sanitize_asin( (string) ( $atts['asin'] ?? '' ) );
+
+		if ( '' === $url ) {
+			$url = Amz_Inserts_Url::normalize( Amz_Inserts_Url::from_asin( $asin ) );
+		}
+
+		if ( '' === $url ) {
+			return '';
+		}
+
+		$display = sanitize_key( (string) ( $atts['display'] ?? 'text' ) );
+		if ( ! in_array( $display, array( 'text', 'button', 'image', 'card' ), true ) ) {
+			$display = 'text';
+		}
+
+		$title = sanitize_text_field( (string) ( $atts['title'] ?? '' ) );
+		$cta   = sanitize_text_field( (string) ( $atts['cta'] ?? '' ) );
+		if ( 'button' === $display && '' === $cta ) {
+			$cta = $title;
+		}
+
+		return self::render(
+			$display,
+			array(
+				array(
+					'url'       => $url,
+					'title'     => $title,
+					'image_id'  => absint( $atts['image_id'] ?? 0 ),
+					'image_url' => (string) ( $atts['image_url'] ?? '' ),
+					'asin'      => $asin,
+				),
+			),
+			4,
+			$cta
+		);
+	}
+
 	public static function render( string $display, array $items, int $columns = 4, string $cta_label = '' ): string {
 		$types = Amz_Inserts_Cpt_Unit::display_types();
-		if ( ! isset( $types[ $display ] ) ) {
+		if ( 'button' !== $display && ! isset( $types[ $display ] ) ) {
 			$display = 'card';
 		}
 
@@ -81,7 +125,7 @@ class Amz_Inserts_Renderer {
 			return '';
 		}
 
-		if ( in_array( $display, array( 'text', 'image', 'card' ), true ) ) {
+		if ( in_array( $display, array( 'text', 'button', 'image', 'card' ), true ) ) {
 			$items = array_slice( $items, 0, 1 );
 		}
 
