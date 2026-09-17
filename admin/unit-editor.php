@@ -117,10 +117,15 @@ class Amz_Inserts_Unit_Editor {
 	public static function render( WP_Post $post ): void {
 		wp_nonce_field( 'amz_inserts_unit', 'amz_inserts_unit_nonce' );
 
-		$display   = Amz_Inserts_Cpt_Unit::get_display( (int) $post->ID );
-		$columns   = Amz_Inserts_Cpt_Unit::get_columns( (int) $post->ID );
-		$items     = Amz_Inserts_Cpt_Unit::get_items( (int) $post->ID );
-		$cta_label = Amz_Inserts_Cpt_Unit::get_cta_label( (int) $post->ID );
+		$display    = Amz_Inserts_Cpt_Unit::get_display( (int) $post->ID );
+		$columns    = Amz_Inserts_Cpt_Unit::get_columns( (int) $post->ID );
+		$items      = Amz_Inserts_Cpt_Unit::get_items( (int) $post->ID );
+		$cta_label  = Amz_Inserts_Cpt_Unit::get_cta_label( (int) $post->ID );
+		$align      = Amz_Inserts_Cpt_Unit::get_align( (int) $post->ID );
+		$image_size = Amz_Inserts_Cpt_Unit::get_image_size( (int) $post->ID );
+		if ( '' === $image_size ) {
+			$image_size = Amz_Inserts_Cpt_Unit::default_image_size( $display );
+		}
 		if ( empty( $items ) ) {
 			$items = array(
 				array(
@@ -152,6 +157,25 @@ class Amz_Inserts_Unit_Editor {
 				<?php endforeach; ?>
 			</select>
 			<span class="description"><?php esc_html_e( '2 columns on phones, then 3, then this many on large screens.', 'amz-inserts' ); ?></span>
+		</p>
+		<p class="amz-inserts-image-layout" <?php echo in_array( $display, array( 'image', 'card' ), true ) ? '' : 'hidden'; ?>>
+			<span>
+				<label for="amz_align"><strong><?php esc_html_e( 'Image alignment', 'amz-inserts' ); ?></strong></label>
+				<select name="amz_align" id="amz_align">
+					<?php foreach ( Amz_Inserts_Cpt_Unit::aligns() as $value => $label ) : ?>
+						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $align, $value ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</span>
+			<span>
+				<label for="amz_image_size"><strong><?php esc_html_e( 'Image size', 'amz-inserts' ); ?></strong></label>
+				<select name="amz_image_size" id="amz_image_size">
+					<?php foreach ( Amz_Inserts_Cpt_Unit::image_sizes() as $value => $label ) : ?>
+						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $image_size, $value ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</span>
+			<span class="description"><?php esc_html_e( 'Size is a max width. Full uses the content column.', 'amz-inserts' ); ?></span>
 		</p>
 		<p>
 			<label for="amz_cta_label"><strong><?php esc_html_e( 'CTA label', 'amz-inserts' ); ?></strong></label>
@@ -255,7 +279,9 @@ class Amz_Inserts_Unit_Editor {
 		}
 
 		$items     = Amz_Inserts_Cpt_Unit::sanitize_items( wp_unslash( $_POST['amz_items'] ?? array() ) );
-		$cta_label = sanitize_text_field( wp_unslash( $_POST['amz_cta_label'] ?? '' ) );
+		$cta_label  = sanitize_text_field( wp_unslash( $_POST['amz_cta_label'] ?? '' ) );
+		$align      = Amz_Inserts_Cpt_Unit::sanitize_align( sanitize_key( wp_unslash( $_POST['amz_align'] ?? 'center' ) ) );
+		$image_size = Amz_Inserts_Cpt_Unit::sanitize_image_size( sanitize_key( wp_unslash( $_POST['amz_image_size'] ?? '' ) ), Amz_Inserts_Cpt_Unit::default_image_size( $display ) );
 
 		$items = Amz_Inserts_Fetch::expand_item_urls( $items );
 		$items = Amz_Inserts_Image::ensure_items( $items, $post_id );
@@ -264,5 +290,7 @@ class Amz_Inserts_Unit_Editor {
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_COLUMNS, $columns );
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_ITEMS, $items );
 		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_CTA_LABEL, $cta_label );
+		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_ALIGN, $align );
+		update_post_meta( $post_id, Amz_Inserts_Cpt_Unit::META_IMAGE_SIZE, $image_size );
 	}
 }

@@ -44,6 +44,8 @@ class Amz_Inserts_Shortcode {
 				'image_url' => '',
 				'image_id'  => 0,
 				'cta'       => '',
+				'align'     => 'center',
+				'size'      => '',
 			),
 			$atts,
 			'amz_link'

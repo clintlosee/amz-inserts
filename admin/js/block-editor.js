@@ -286,6 +286,8 @@
 			unitId: { type: 'number', default: 0 },
 			display: { type: 'string', default: 'card' },
 			columns: { type: 'number', default: 4 },
+			imageAlign: { type: 'string', default: 'center' },
+			imageSize: { type: 'string', default: '' },
 			items: { type: 'array', default: [] },
 		},
 		supports: { html: false },
@@ -344,6 +346,38 @@
 											setAttributes({ display: display });
 										},
 									}),
+									attributes.display === 'image' || attributes.display === 'card'
+										? el(
+												Fragment,
+												null,
+												el(SelectControl, {
+													label: __('Image alignment', 'amz-inserts'),
+													value: attributes.imageAlign || 'center',
+													options: [
+														{ label: __('Left', 'amz-inserts'), value: 'left' },
+														{ label: __('Center', 'amz-inserts'), value: 'center' },
+														{ label: __('Right', 'amz-inserts'), value: 'right' },
+													],
+													onChange: function (imageAlign) {
+														setAttributes({ imageAlign: imageAlign });
+													},
+												}),
+												el(SelectControl, {
+													label: __('Image size', 'amz-inserts'),
+													help: __('Max width of the product image. Full uses the content column.', 'amz-inserts'),
+													value: attributes.imageSize || (attributes.display === 'image' ? 'medium' : 'full'),
+													options: [
+														{ label: __('Small (200px)', 'amz-inserts'), value: 'small' },
+														{ label: __('Medium (320px)', 'amz-inserts'), value: 'medium' },
+														{ label: __('Large (480px)', 'amz-inserts'), value: 'large' },
+														{ label: __('Full width', 'amz-inserts'), value: 'full' },
+													],
+													onChange: function (imageSize) {
+														setAttributes({ imageSize: imageSize });
+													},
+												})
+										  )
+										: null,
 									attributes.display === 'grid'
 										? el(RangeControl, {
 												label: __('Columns', 'amz-inserts'),

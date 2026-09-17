@@ -25,15 +25,23 @@ class Amz_Inserts_Block {
 				'type'    => 'number',
 				'default' => 0,
 			),
-			'display' => array(
+			'display'    => array(
 				'type'    => 'string',
 				'default' => 'card',
 			),
-			'columns' => array(
+			'columns'    => array(
 				'type'    => 'number',
 				'default' => 4,
 			),
-			'items'   => array(
+			'imageAlign' => array(
+				'type'    => 'string',
+				'default' => 'center',
+			),
+			'imageSize'  => array(
+				'type'    => 'string',
+				'default' => '',
+			),
+			'items'      => array(
 				'type'    => 'array',
 				'default' => array(),
 			),
@@ -83,7 +91,10 @@ class Amz_Inserts_Block {
 			return Amz_Inserts_Renderer::render(
 				sanitize_key( (string) ( $attributes['display'] ?? 'card' ) ),
 				$items,
-				absint( $attributes['columns'] ?? 4 )
+				absint( $attributes['columns'] ?? 4 ),
+				'',
+				sanitize_key( (string) ( $attributes['imageAlign'] ?? 'center' ) ),
+				sanitize_key( (string) ( $attributes['imageSize'] ?? '' ) )
 			);
 		}
 

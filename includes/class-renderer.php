@@ -62,7 +62,9 @@ class Amz_Inserts_Renderer {
 			Amz_Inserts_Cpt_Unit::get_display( $post_id ),
 			Amz_Inserts_Cpt_Unit::get_items( $post_id ),
 			Amz_Inserts_Cpt_Unit::get_columns( $post_id ),
-			Amz_Inserts_Cpt_Unit::get_cta_label( $post_id )
+			Amz_Inserts_Cpt_Unit::get_cta_label( $post_id ),
+			Amz_Inserts_Cpt_Unit::get_align( $post_id ),
+			Amz_Inserts_Cpt_Unit::get_image_size( $post_id )
 		);
 	}
 
@@ -106,11 +108,13 @@ class Amz_Inserts_Renderer {
 				),
 			),
 			4,
-			$cta
+			$cta,
+			(string) ( $atts['align'] ?? 'center' ),
+			(string) ( $atts['size'] ?? '' )
 		);
 	}
 
-	public static function render( string $display, array $items, int $columns = 4, string $cta_label = '' ): string {
+	public static function render( string $display, array $items, int $columns = 4, string $cta_label = '', string $align = '', string $image_size = '' ): string {
 		$types = Amz_Inserts_Cpt_Unit::display_types();
 		if ( 'button' !== $display && ! isset( $types[ $display ] ) ) {
 			$display = 'card';
@@ -119,6 +123,9 @@ class Amz_Inserts_Renderer {
 		if ( $columns < 2 || $columns > 4 ) {
 			$columns = 4;
 		}
+
+		$align      = Amz_Inserts_Cpt_Unit::sanitize_align( $align );
+		$image_size = Amz_Inserts_Cpt_Unit::sanitize_image_size( $image_size, Amz_Inserts_Cpt_Unit::default_image_size( $display ) );
 
 		$items = self::prepare_items( $items, 'image' === $display ? 'large' : 'medium' );
 		if ( empty( $items ) ) {
@@ -129,15 +136,21 @@ class Amz_Inserts_Renderer {
 			$items = array_slice( $items, 0, 1 );
 		}
 
-		$cta_label = self::cta_label( $cta_label );
-		$template = AMZ_INSERTS_DIR . 'templates/' . $display . '.php';
+		$cta_label    = self::cta_label( $cta_label );
+		$layout_class = sprintf(
+			'amz-inserts amz-inserts--%1$s amz-inserts--align-%2$s amz-inserts--size-%3$s',
+			sanitize_html_class( $display ),
+			sanitize_html_class( $align ),
+			sanitize_html_class( $image_size )
+		);
+		$template     = AMZ_INSERTS_DIR . 'templates/' . $display . '.php';
 		if ( ! is_readable( $template ) ) {
 			return '';
 		}
 
 		ob_start();
 		if ( 'card' === $display ) {
-			echo '<div class="amz-inserts amz-inserts--card">';
+			echo '<div class="' . esc_attr( $layout_class ) . '">';
 		}
 		include $template;
 		if ( 'card' === $display ) {

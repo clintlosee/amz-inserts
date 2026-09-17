@@ -200,7 +200,7 @@ class Amz_Inserts_Settings {
 			<p><?php esc_html_e( 'Use the 10-character ASIN from the Amazon product page. The Associate tag on this screen is added automatically. amazon.com is the default marketplace.', 'amz-inserts' ); ?></p>
 			<p class="description"><?php esc_html_e( 'Do not paste amzn.to / a.co short links into [amz_link] — those are not expanded, so tracking may not apply. Short links are fine on a saved unit if you Fetch or save so they can be expanded first.', 'amz-inserts' ); ?></p>
 			<pre style="background:#f6f7f7;padding:12px;overflow:auto;"><?php echo esc_html( $examples ); ?></pre>
-			<p class="description"><?php esc_html_e( 'display can be text (default), button, image, or card. Optional: image_url, image_id, cta.', 'amz-inserts' ); ?></p>
+			<p class="description"><?php esc_html_e( 'display can be text (default), button, image, or card. Optional: image_url, image_id, cta, align (left/center/right), size (small/medium/large/full).', 'amz-inserts' ); ?></p>
 		</div>
 		<?php
 	}

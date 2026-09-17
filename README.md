@@ -19,7 +19,7 @@ Amazon and FTC rules still require a clear affiliate disclosure on the site. A f
 1. Go to **Amazon Inserts → Add New**.
 2. Give it a name you will recognize (this label is for you, not shown on the front).
 3. Choose a display: text link, image, card, or grid.
-4. For a grid, set max columns (2–4). Layout is 2 columns on phones, 3 on tablets, and up to 4 on large screens.
+4. For a grid, set max columns (2–4). Layout is 2 columns on phones, 3 on tablets, and up to 4 on large screens. For an image or card, set image alignment (left, center, right) and image size (small 200px, medium 320px, large 480px, or full width). Image units default to centered medium; cards default to full width.
 5. Optionally set a CTA label for this unit, or leave it empty to use the global default.
 6. Paste one or more Amazon URLs and set a title. For the image, either:
    - Paste an **Image URL** (right-click the product photo on Amazon → Copy image address), or
@@ -73,6 +73,8 @@ For a single Amazon link without creating a saved unit, use `[amz_link]`. Defaul
 | `display` | `text` (default), `button`, `image`, or `card`. |
 | `image_url` / `image_id` | Optional image for `image` and `card`. Otherwise the ASIN image is used when an ASIN is known. |
 | `cta` | Optional button/card label. Otherwise the global default CTA is used. For `button`, `title` is used when `cta` is omitted. |
+| `align` | Image alignment for `image` and `card`: `left`, `center` (default), or `right`. |
+| `size` | Image max width for `image` and `card`: `small`, `medium`, `large`, or `full`. Image display defaults to `medium`; card defaults to `full`. |
 
 Examples:
 
@@ -82,6 +84,7 @@ Examples:
 [amz_link asin="B0EXAMPLE1" title="Widget" display="button"]
 [amz_link asin="B0EXAMPLE1" title="Widget" display="card" cta="See it on Amazon"]
 [amz_link url="https://www.amazon.com/dp/B0EXAMPLE1" title="Widget" display="image" image_url="https://m.media-amazon.com/images/I/example.jpg"]
+[amz_link asin="B0EXAMPLE1" title="Widget" display="image" align="center" size="medium"]
 ```
 
 When `url` is omitted, the shortcode builds `https://www.amazon.com/dp/{ASIN}`. There is no marketplace setting; amazon.com is the default. Links go through the same normalize / Associate tag / `rel` handling as saved units. Missing or invalid `url`/`asin` renders nothing. Prefer a product URL or ASIN: short links (`amzn.to`, `a.co`, `amzn.com`) are not expanded when the shortcode renders, so Associates tagging is skipped until the URL is a full product page. The same examples appear on **Amazon Inserts → Settings**.

@@ -16,6 +16,8 @@ class Amz_Inserts_Cpt_Unit {
 	public const META_COLUMNS = '_amz_columns';
 	public const META_ITEMS = '_amz_items';
 	public const META_CTA_LABEL = '_amz_cta_label';
+	public const META_ALIGN = '_amz_align';
+	public const META_IMAGE_SIZE = '_amz_image_size';
 
 	public static function init(): void {
 		add_action( 'init', array( self::class, 'register' ) );
@@ -67,6 +69,39 @@ class Amz_Inserts_Cpt_Unit {
 		);
 	}
 
+	public static function aligns(): array {
+		return array(
+			'left'   => __( 'Left', 'amz-inserts' ),
+			'center' => __( 'Center', 'amz-inserts' ),
+			'right'  => __( 'Right', 'amz-inserts' ),
+		);
+	}
+
+	public static function image_sizes(): array {
+		return array(
+			'small'  => __( 'Small (200px)', 'amz-inserts' ),
+			'medium' => __( 'Medium (320px)', 'amz-inserts' ),
+			'large'  => __( 'Large (480px)', 'amz-inserts' ),
+			'full'   => __( 'Full width', 'amz-inserts' ),
+		);
+	}
+
+	public static function default_image_size( string $display ): string {
+		return 'image' === $display ? 'medium' : 'full';
+	}
+
+	public static function sanitize_align( string $align ): string {
+		return isset( self::aligns()[ $align ] ) ? $align : 'center';
+	}
+
+	public static function sanitize_image_size( string $size, string $empty = 'full' ): string {
+		if ( isset( self::image_sizes()[ $size ] ) ) {
+			return $size;
+		}
+
+		return isset( self::image_sizes()[ $empty ] ) ? $empty : 'full';
+	}
+
 	public static function get_display( int $post_id ): string {
 		$display = (string) get_post_meta( $post_id, self::META_DISPLAY, true );
 		$types   = self::display_types();
@@ -91,6 +126,16 @@ class Amz_Inserts_Cpt_Unit {
 
 	public static function get_cta_label( int $post_id ): string {
 		return sanitize_text_field( (string) get_post_meta( $post_id, self::META_CTA_LABEL, true ) );
+	}
+
+	public static function get_align( int $post_id ): string {
+		return self::sanitize_align( (string) get_post_meta( $post_id, self::META_ALIGN, true ) );
+	}
+
+	public static function get_image_size( int $post_id ): string {
+		$size = (string) get_post_meta( $post_id, self::META_IMAGE_SIZE, true );
+
+		return isset( self::image_sizes()[ $size ] ) ? $size : '';
 	}
 
 	public static function sanitize_items( mixed $raw ): array {

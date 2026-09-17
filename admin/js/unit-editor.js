@@ -69,7 +69,9 @@
 	}
 
 	$(document).on('change', 'input[name="amz_display"]', function () {
-		$('.amz-inserts-columns').prop('hidden', $(this).val() !== 'grid');
+		var val = $(this).val();
+		$('.amz-inserts-columns').prop('hidden', val !== 'grid');
+		$('.amz-inserts-image-layout').prop('hidden', val !== 'image' && val !== 'card');
 	});
 
 	$('#amz-inserts-add-item').on('click', function () {

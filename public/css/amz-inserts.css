@@ -32,15 +32,62 @@
 	color: inherit;
 }
 
+.amz-inserts--size-small {
+	--amz-image-max: 200px;
+}
+
+.amz-inserts--size-medium {
+	--amz-image-max: 320px;
+}
+
+.amz-inserts--size-large {
+	--amz-image-max: 480px;
+}
+
+.amz-inserts--size-full {
+	--amz-image-max: 100%;
+}
+
+.amz-inserts--image {
+	text-align: left;
+}
+
+.amz-inserts--image.amz-inserts--align-center {
+	text-align: center;
+}
+
+.amz-inserts--image.amz-inserts--align-right {
+	text-align: right;
+}
+
+.amz-inserts--image .amz-inserts__image-link {
+	display: inline-block;
+	width: 100%;
+	max-width: var(--amz-image-max, 100%);
+	vertical-align: top;
+}
+
 .amz-inserts__card img,
 .amz-inserts--image img {
 	width: 100%;
+	max-width: var(--amz-image-max, 100%);
 	height: auto;
 	display: block;
 }
 
+.amz-inserts--card.amz-inserts--align-center .amz-inserts__card img {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.amz-inserts--card.amz-inserts--align-right .amz-inserts__card img {
+	margin-left: auto;
+	margin-right: 0;
+}
+
 .amz-inserts--grid .amz-inserts__card img {
 	height: 120px;
+	max-width: 100%;
 	object-fit: contain;
 	object-position: center;
 }

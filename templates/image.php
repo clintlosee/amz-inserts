@@ -1,4 +1,4 @@
-<div class="amz-inserts amz-inserts--image">
+<div class="<?php echo esc_attr( $layout_class ); ?>">
 	<?php foreach ( $items as $item ) : ?>
 		<a class="amz-inserts__image-link" href="<?php echo esc_url( $item['url'] ); ?>" <?php echo Amz_Inserts_Renderer::link_atts(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 			<?php
