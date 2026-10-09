@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Amz_Inserts_Renderer {
 
+	private const STYLE_FILE = 'public/css/amz-inserts.min.css';
+
 	public static function init(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
 		add_action( 'enqueue_block_editor_assets', array( self::class, 'enqueue' ) );
@@ -18,35 +20,38 @@ class Amz_Inserts_Renderer {
 	}
 
 	public static function enqueue(): void {
-		$path = AMZ_INSERTS_DIR . 'public/css/amz-inserts.css';
+		$path = self::style_path();
 		if ( ! is_readable( $path ) ) {
 			return;
 		}
 
 		wp_enqueue_style(
 			'amz-inserts',
-			AMZ_INSERTS_URL . 'public/css/amz-inserts.css',
+			AMZ_INSERTS_URL . self::STYLE_FILE,
 			array(),
 			(string) filemtime( $path )
 		);
-		wp_add_inline_style( 'amz-inserts', (string) file_get_contents( $path ) );
 	}
 
 	/**
-	 * SiteGround minifies this to amz-inserts.min.css and drops ?ver=.
-	 * Re-attach mtime so Cloudflare does not serve a year-old copy.
+	 * SiteGround drops ?ver= from the stylesheet URL.
+	 * Re-attach the min file mtime so Cloudflare does not serve an old copy.
 	 */
 	public static function keep_cache_bust( string $src, string $handle ): string {
 		if ( 'amz-inserts' !== $handle ) {
 			return $src;
 		}
 
-		$path = AMZ_INSERTS_DIR . 'public/css/amz-inserts.css';
+		$path = self::style_path();
 		if ( ! is_readable( $path ) ) {
 			return $src;
 		}
 
 		return add_query_arg( 'ver', (string) filemtime( $path ), $src );
+	}
+
+	private static function style_path(): string {
+		return AMZ_INSERTS_DIR . self::STYLE_FILE;
 	}
 
 	public static function render_unit( int $post_id ): string {
