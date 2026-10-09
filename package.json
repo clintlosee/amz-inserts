@@ -1,0 +1,12 @@
+{
+  "name": "amz-inserts",
+  "private": true,
+  "scripts": {
+    "build:css": "bash scripts/build.sh css",
+    "check:css": "bash scripts/build.sh check",
+    "zip": "bash scripts/build.sh zip"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
