@@ -30,7 +30,8 @@ Product Advertising API and live prices are out of scope. Each product stores UR
 | `package.json` | `build:css`, `check:css`, and `zip` scripts. Dev dependency is esbuild. |
 | `scripts/build.sh` | Minifies CSS, checks the committed min file, writes `dist/amz-inserts.zip`. |
 | `.github/workflows/release.yml` | On pull requests, fails if the min file is stale. On a `v*` tag, attaches the zip to a GitHub Release. |
-| `README.md` | Install, build, and release notes for humans. |
+| `docs/RELEASING.md` | CSS build, version bump, git tag, and zip install steps. |
+| `README.md` | Install and usage for humans. |
 
 There is no `languages/` directory and no `vendor/`. There is no PHPUnit suite.
 
@@ -102,16 +103,9 @@ Work on a branch. Open a pull request. Do not merge without Clint's explicit app
 
 ## Deploy
 
-Production updates are a zip upload in wp-admin (Plugins → Add New → Upload Plugin). Clint will keep doing that.
+Production updates are a zip upload in wp-admin (Plugins → Add New → Upload Plugin). Clint will keep doing that. Follow `docs/RELEASING.md` for the version bump, the `vX.Y.Z` tag, and the GitHub Release zip.
 
-1. Set the same version in the `Version` header and `AMZ_INSERTS_VERSION` in `amz-inserts.php`.
-2. If CSS changed, run `npm run build:css` and commit the min file with the source.
-3. Commit, push, and merge the pull request after Clint's approval.
-4. Tag that commit `vX.Y.Z` (the plugin version) and push the tag. Example: `git tag v1.1.4 && git push origin v1.1.4`.
-5. `.github/workflows/release.yml` runs `npm run check:css`, then `npm run zip`, and attaches `amz-inserts.zip` to the GitHub Release.
-6. Download that zip and upload it in wp-admin. The archive's top-level folder is `amz-inserts/`.
-
-`npm run zip` builds the same archive locally at `dist/amz-inserts.zip` when you need a zip without a tag. It leaves out `.git`, `.github`, `node_modules`, `package.json`, `package-lock.json`, `scripts/`, and `AGENTS.md`.
+`npm run zip` writes `dist/amz-inserts.zip` when you need a zip without a tag. The archive's top-level folder is `amz-inserts/`. It leaves out `.git`, `.github`, `node_modules`, `package.json`, `package-lock.json`, `scripts/`, `docs/`, and `AGENTS.md`.
 
 ## Secrets and config
 

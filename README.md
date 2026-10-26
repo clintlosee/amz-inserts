@@ -10,7 +10,7 @@ Front-end CSS source of truth is `public/css/amz-inserts.css`. The plugin enqueu
 
 ## Install
 
-1. Download `amz-inserts.zip` from the GitHub Release for the version you want (see Release). In wp-admin, go to Plugins → Add New → Upload Plugin. The zip's top-level folder is `amz-inserts/`, so it installs as `wp-content/plugins/amz-inserts/`. To ship a zip yourself instead, run `npm run zip` and upload `dist/amz-inserts.zip` the same way.
+1. Download `amz-inserts.zip` from the GitHub Release for the version you want (see [docs/RELEASING.md](docs/RELEASING.md)). In wp-admin, go to Plugins → Add New → Upload Plugin. The zip's top-level folder is `amz-inserts/`, so it installs as `wp-content/plugins/amz-inserts/`. To ship a zip yourself instead, run `npm run zip` and upload `dist/amz-inserts.zip` the same way.
 2. In wp-admin, activate **Amazon Inserts**.
 3. Open **Amazon Inserts → Settings** and save your Associate tag (for example `yourname-20`). Full Amazon product URLs that do not already include `tag=` will use this value. Short links (`amzn.to`, `a.co`, `amzn.com`) are expanded to the product page first; the tag is not applied to the short URL itself. You can also customize the default CTA button label used by cards and grids.
 
@@ -99,24 +99,8 @@ Live Amazon prices and the Product Advertising API (PA-API) are not included. Ea
 
 If you add PA-API later you will need an active Associates account, API keys, request signing, and a refresh job. v1 is meant to work without any of that.
 
-## Build
+## Development / Release
 
-```
-npm install
-npm run build:css
-npm run check:css
-npm run zip
-```
+How to build CSS, bump the version, tag a release, and install the zip is in [docs/RELEASING.md](docs/RELEASING.md).
 
-`npm run build:css` minifies `public/css/amz-inserts.css` into `public/css/amz-inserts.min.css` (whitespace and comments only, so the rules stay the same). `npm run check:css` exits non-zero when the committed min file is stale. `npm run zip` rebuilds the min file and writes `dist/amz-inserts.zip`. The archive contains an `amz-inserts/` folder and leaves out `.git`, `.github`, `node_modules`, `package.json`, `package-lock.json`, `scripts/`, and `AGENTS.md`.
-
-## Release
-
-Updates still go out by uploading a zip in wp-admin.
-
-1. Set the same version in the `Version` header and `AMZ_INSERTS_VERSION` in `amz-inserts.php`.
-2. If CSS changed, run `npm run build:css` and commit `public/css/amz-inserts.min.css` with the source.
-3. Commit and push.
-4. Tag that commit `vX.Y.Z` (the plugin version) and push the tag. Example: `git tag v1.1.4 && git push origin v1.1.4`.
-5. The Release workflow checks the min file, builds `amz-inserts.zip`, and attaches it to the GitHub Release.
-6. Download that zip and upload it under Plugins → Add New → Upload Plugin.
+`npm install` once. After a CSS edit, run `npm run build:css` and commit the source and the min file. `npm run zip` writes a local `dist/amz-inserts.zip`.
