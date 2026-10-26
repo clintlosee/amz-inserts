@@ -40,6 +40,7 @@ case "$cmd" in
 			--exclude='node_modules' \
 			--exclude='scripts' \
 			--exclude='dist' \
+			--exclude='docs' \
 			--exclude='.cursor' \
 			--exclude='package.json' \
 			--exclude='package-lock.json' \
@@ -51,7 +52,7 @@ case "$cmd" in
 		out="$PWD/dist/amz-inserts.zip"
 		rm -f "$out"
 		(cd "$stage" && zip -r -q "$out" amz-inserts)
-		if unzip -l "$out" | grep -E 'node_modules/|package(-lock)?\.json|AGENTS\.md|/\.github/|/\.git/' >/dev/null; then
+		if unzip -l "$out" | grep -E 'node_modules/|package(-lock)?\.json|AGENTS\.md|/\.github/|/\.git/|/docs/' >/dev/null; then
 			echo "zip contains dev files" >&2
 			exit 1
 		fi
