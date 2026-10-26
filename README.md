@@ -2,13 +2,15 @@
 
 A WordPress plugin for reusable Amazon affiliate inserts: text links, image links, product cards, and card grids. Any blog with an Amazon Associates account can use it.
 
-Inserts work in classic posts via a shortcode and in the block editor via the **Amazon Insert** block. There is no Node, npm, or build step. Copy the plugin folder into `wp-content/plugins/` and activate it.
+Inserts work in classic posts via a shortcode and in the block editor via the **Amazon Insert** block.
 
 Requires WordPress 6.4+ and PHP 8.1+.
 
+Front-end CSS source of truth is `public/css/amz-inserts.css`. The plugin enqueues `public/css/amz-inserts.min.css`. Regenerate that file with `npm run build:css` after a CSS edit and commit it. Pull requests fail when the min file does not match the source.
+
 ## Install
 
-1. Copy this folder into `wp-content/plugins/amz-plugin` (or `amazon-inserts`).
+1. Download `amz-inserts.zip` from the GitHub Release for the version you want (see Release). In wp-admin, go to Plugins → Add New → Upload Plugin. The zip's top-level folder is `amz-inserts/`, so it installs as `wp-content/plugins/amz-inserts/`. To ship a zip yourself instead, run `npm run zip` and upload `dist/amz-inserts.zip` the same way.
 2. In wp-admin, activate **Amazon Inserts**.
 3. Open **Amazon Inserts → Settings** and save your Associate tag (for example `yourname-20`). Full Amazon product URLs that do not already include `tag=` will use this value. Short links (`amzn.to`, `a.co`, `amzn.com`) are expanded to the product page first; the tag is not applied to the short URL itself. You can also customize the default CTA button label used by cards and grids.
 
@@ -96,3 +98,25 @@ Text, image, and card reuse the same templates as `[amz_unit]`. `button` is a th
 Live Amazon prices and the Product Advertising API (PA-API) are not included. Each product stores URL, title, image, and ASIN (parsed from the URL when possible) so PA-API can fill the same fields later without a data migration.
 
 If you add PA-API later you will need an active Associates account, API keys, request signing, and a refresh job. v1 is meant to work without any of that.
+
+## Build
+
+```
+npm install
+npm run build:css
+npm run check:css
+npm run zip
+```
+
+`npm run build:css` minifies `public/css/amz-inserts.css` into `public/css/amz-inserts.min.css` (whitespace and comments only, so the rules stay the same). `npm run check:css` exits non-zero when the committed min file is stale. `npm run zip` rebuilds the min file and writes `dist/amz-inserts.zip`. The archive contains an `amz-inserts/` folder and leaves out `.git`, `.github`, `node_modules`, `package.json`, `package-lock.json`, `scripts/`, and `AGENTS.md`.
+
+## Release
+
+Updates still go out by uploading a zip in wp-admin.
+
+1. Set the same version in the `Version` header and `AMZ_INSERTS_VERSION` in `amz-inserts.php`.
+2. If CSS changed, run `npm run build:css` and commit `public/css/amz-inserts.min.css` with the source.
+3. Commit and push.
+4. Tag that commit `vX.Y.Z` (the plugin version) and push the tag. Example: `git tag v1.1.4 && git push origin v1.1.4`.
+5. The Release workflow checks the min file, builds `amz-inserts.zip`, and attaches it to the GitHub Release.
+6. Download that zip and upload it under Plugins → Add New → Upload Plugin.
